@@ -1,0 +1,111 @@
+
+services:
+  # PostgreSQL with OMOP CDM
+  postgres:
+    image: postgres:13-alpine
+    container_name: omop-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ohdsi}
+      POSTGRES_USER: ${POSTGRES_USER:-ohdsi_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init-scripts:/docker-entrypoint-initdb.d
+      - ./sample-data:/sample-data:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-ohdsi_admin} -d $${POSTGRES_DB:-ohdsi}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ohdsi-network
+    restart: unless-stopped
+
+  # OHDSI WebAPI - REST API for OMOP
+  webapi:
+    image: ohdsi/webapi:latest
+    container_name: omop-webapi
+    environment:
+      DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+      DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ohdsi}
+      DATASOURCE_USERNAME: ${POSTGRES_USER:-ohdsi_admin}
+      DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      DATASOURCE_OHDSI_SCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
+      DATASOURCE_CDM_SCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
+      DATASOURCE_COHORT_SCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
+      FLYWAY_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+      FLYWAY_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ohdsi}
+      FLYWAY_SCHEMAS: webapi
+      FLYWAY_PLACEHOLDERS_OHDSISCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
+      SECURITY_ENABLED: "false"
+      SECURITY_ORIGIN: "*"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/WebAPI/info"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - ohdsi-network
+    restart: unless-stopped
+
+  # OHDSI Atlas - Web UI
+  atlas:
+    image: ohdsi/atlas:latest
+    container_name: omop-atlas
+    environment:
+      WEBAPI_URL: http://webapi:8080/WebAPI/
+      ATLAS_INSTANCE_NAME: ${ATLAS_INSTANCE_NAME:-OMOP Development}
+      ATLAS_COHORT_COMPARISON_RESULTS_ENABLED: ${ATLAS_COHORT_COMPARISON_RESULTS_ENABLED:-true}
+      ATLAS_USER_AUTH_ENABLED: ${ATLAS_USER_AUTH_ENABLED:-false}
+    ports:
+      - "8081:80"
+    depends_on:
+      webapi:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - ohdsi-network
+    restart: unless-stopped
+
+  # Achilles - Data Quality Dashboard (optional - run on demand)
+  achilles:
+    image: ohdsi/achilles:latest
+    container_name: omop-achilles
+    environment:
+      ACHILLES_DB_URI: postgresql://${POSTGRES_USER:-ohdsi_admin}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-ohdsi}
+      ACHILLES_CDM_SCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
+      ACHILLES_VOCAB_SCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
+      ACHILLES_RESULTS_SCHEMA: ${ACHILLES_RESULTS_SCHEMA:-ohdsi_results}
+      ACHILLES_CDM_VERSION: ${OMOP_CDM_VERSION:-5.4}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ohdsi-network
+    profiles:
+      - tools  # Only starts when explicitly requested with --profile tools
+    command: ["R", "-e", "Achilles::achilles()"]
+
+volumes:
+  postgres-data:
+    name: omop-postgres-data
+    driver: local
+
+networks:
+  ohdsi-network:
+    name: omop-network
+    driver: bridge
