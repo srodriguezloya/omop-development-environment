@@ -1,6 +1,5 @@
 
 services:
-  # PostgreSQL with OMOP CDM
   postgres:
     image: postgres:13-alpine
     container_name: omop-postgres
@@ -26,20 +25,29 @@ services:
 
   # OHDSI WebAPI - REST API for OMOP
   webapi:
-    image: ohdsi/webapi:latest
+    image: ohdsi/webapi:2.15.1
     container_name: omop-webapi
     environment:
       DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
       DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ohdsi}
       DATASOURCE_USERNAME: ${POSTGRES_USER:-ohdsi_admin}
       DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+
+      DATASOURCE_CDM_SCHEMA: ${DATASOURCE_CDM_SCHEMA:-cdm}
       DATASOURCE_OHDSI_SCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
-      DATASOURCE_CDM_SCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
-      DATASOURCE_COHORT_SCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
+      DATASOURCE_COHORT_SCHEMA: ${DATASOURCE_COHORT_SCHEMA:-ohdsi_results}
+      DATASOURCE_RESULTS_SCHEMA: ${DATASOURCE_RESULTS_SCHEMA:-ohdsi_results}
+
+      # Spring Batch table prefix
+      SPRING_BATCH_REPOSITORY_TABLEPREFIX: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}.BATCH_
+
       FLYWAY_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
       FLYWAY_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ohdsi}
-      FLYWAY_SCHEMAS: webapi
+      FLYWAY_DATASOURCE_USERNAME: ${POSTGRES_USER:-ohdsi_admin}
+      FLYWAY_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      FLYWAY_SCHEMAS: ${FLYWAY_SCHEMAS:-webapi}
       FLYWAY_PLACEHOLDERS_OHDSISCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
+
       SECURITY_ENABLED: "false"
       SECURITY_ORIGIN: "*"
     ports:
@@ -52,10 +60,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 90s
     networks:
       - ohdsi-network
-    restart: unless-stopped
+    restart: always
+#    command: ["sleep", "infinity"]
 
   # OHDSI Atlas - Web UI
   atlas:

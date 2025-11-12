@@ -25,7 +25,7 @@ fi
 # Start services
 echo "🚀 Starting services..."
 echo ""
-docker-compose up -d
+docker compose up -d
 
 echo ""
 echo "⏳ Waiting for services to be healthy..."
@@ -36,10 +36,10 @@ echo ""
 echo "Waiting for PostgreSQL..."
 timeout=60
 elapsed=0
-while ! docker-compose exec -T postgres pg_isready -U ohdsi_admin -d ohdsi > /dev/null 2>&1; do
+while ! docker compose exec -T postgres pg_isready -U ohdsi_admin -d ohdsi > /dev/null 2>&1; do
     if [ $elapsed -ge $timeout ]; then
         echo "❌ PostgreSQL failed to start within $timeout seconds"
-        docker-compose logs postgres
+        docker compose logs postgres
         exit 1
     fi
     echo -n "."
@@ -56,7 +56,7 @@ elapsed=0
 while ! curl -sf http://localhost:8080/WebAPI/info > /dev/null 2>&1; do
     if [ $elapsed -ge $timeout ]; then
         echo "❌ WebAPI failed to start within $timeout seconds"
-        docker-compose logs webapi
+        docker compose logs webapi
         exit 1
     fi
     echo -n "."
@@ -73,7 +73,7 @@ elapsed=0
 while ! curl -sf http://localhost:8081 > /dev/null 2>&1; do
     if [ $elapsed -ge $timeout ]; then
         echo "❌ Atlas failed to start within $timeout seconds"
-        docker-compose logs atlas
+        docker compose logs atlas
         exit 1
     fi
     echo -n "."
@@ -94,7 +94,7 @@ echo "  🔌 WebAPI:    http://localhost:8080/WebAPI"
 echo "  🗄️  PostgreSQL: localhost:5432"
 echo ""
 echo "Useful commands:"
-echo "  View logs:    docker-compose logs -f"
+echo "  View logs:    docker compose logs -f"
 echo "  Stop:         ./scripts/stop.sh"
 echo "  Reset:        ./scripts/reset.sh"
 echo "  Load data:    ./scripts/load-synthea-data.sh"
