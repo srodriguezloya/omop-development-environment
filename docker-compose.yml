@@ -45,7 +45,7 @@ services:
       FLYWAY_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ohdsi}
       FLYWAY_DATASOURCE_USERNAME: ${POSTGRES_USER:-ohdsi_admin}
       FLYWAY_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      FLYWAY_SCHEMAS: ${FLYWAY_SCHEMAS:-webapi}
+      FLYWAY_SCHEMAS: ${FLYWAY_SCHEMAS:-ohdsi}
       FLYWAY_PLACEHOLDERS_OHDSISCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
 
       SECURITY_ENABLED: "false"
@@ -64,7 +64,6 @@ services:
     networks:
       - ohdsi-network
     restart: always
-#    command: ["sleep", "infinity"]
 
   # OHDSI Atlas - Web UI
   atlas:

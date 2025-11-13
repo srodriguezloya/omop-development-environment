@@ -1,10 +1,7 @@
--- This script tells Flyway that the Spring Batch migration is already complete
--- Add this as the LAST init script (03-mark-flyway-migration-complete.sql)
-
 -- First, create the Flyway metadata table if it doesn't exist
-CREATE TABLE IF NOT EXISTS webapi.schema_version (
-                                                     installed_rank INT NOT NULL,
-                                                     version VARCHAR(50),
+CREATE TABLE IF NOT EXISTS ohdsi.schema_version (
+                                                    installed_rank INT NOT NULL,
+                                                    version VARCHAR(50),
     description VARCHAR(200) NOT NULL,
     type VARCHAR(20) NOT NULL,
     script VARCHAR(1000) NOT NULL,
@@ -17,7 +14,7 @@ CREATE TABLE IF NOT EXISTS webapi.schema_version (
     );
 
 -- Mark the Spring Batch migration as already applied
-INSERT INTO webapi.schema_version (
+INSERT INTO ohdsi.schema_version (
     installed_rank,
     version,
     description,
