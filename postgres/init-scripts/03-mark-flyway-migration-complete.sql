@@ -1,7 +1,7 @@
 -- First, create the Flyway metadata table if it doesn't exist
 CREATE TABLE IF NOT EXISTS ohdsi.schema_version (
-                                                    installed_rank INT NOT NULL,
-                                                    version VARCHAR(50),
+    installed_rank INT NOT NULL,
+    version VARCHAR(50),
     description VARCHAR(200) NOT NULL,
     type VARCHAR(20) NOT NULL,
     script VARCHAR(1000) NOT NULL,
