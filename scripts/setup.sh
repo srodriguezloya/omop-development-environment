@@ -59,24 +59,6 @@ if [ ! -f postgres/init-scripts/02-omop-cdm-ddl.sql ]; then
     echo ""
 fi
 
-# Create initial schema setup script if not exists
-if [ ! -f postgres/init-scripts/01-create-schemas.sql ]; then
-    echo "📝 Creating schema setup script..."
-    cat > postgres/init-scripts/01-create-schemas.sql <<'EOF'
--- Create OMOP schemas
-CREATE SCHEMA IF NOT EXISTS ohdsi;
-CREATE SCHEMA IF NOT EXISTS ohdsi_results;
-CREATE SCHEMA IF NOT EXISTS webapi;
-
--- Grant permissions
-GRANT ALL ON SCHEMA ohdsi TO ohdsi_admin;
-GRANT ALL ON SCHEMA ohdsi_results TO ohdsi_admin;
-GRANT ALL ON SCHEMA webapi TO ohdsi_admin;
-EOF
-    echo "✅ Schema setup script created"
-    echo ""
-fi
-
 echo "========================================="
 echo "✅ Setup Complete!"
 echo "========================================="
