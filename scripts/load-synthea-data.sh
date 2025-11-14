@@ -4,7 +4,7 @@
 set -e
 
 echo "========================================="
-echo "OMOP CDM - Synthea Data Loader"
+echo "OMOP CDM - Synthea Data Loader (Full ETL)"
 echo "========================================="
 echo ""
 
@@ -97,14 +97,35 @@ else
 fi
 echo ""
 
-echo "🔄 Step 4/4: Loading data into OMOP CDM..."
-echo "   Database: omop-postgres, Schema: cdm"
+#echo "🔄 Step 4/4: Loading data into OMOP CDM..."
+#echo "   Database: omop-postgres, Schema: cdm"
+#echo ""
+#echo "⚠️  ETL process not yet implemented"
+#echo ""
+#echo "Your Synthea CSV files are ready at: $OUTPUT_DIR/csv/"
+#echo ""
+#echo "To load into OMOP CDM, you can:"
+#echo "1. Use ETL-Synthea: https://github.com/OHDSI/ETL-Synthea"
+#echo "2. Write custom loading scripts"
+#echo ""
+
+echo "Step 4/4: Loading data into OMOP CDM using ETL-Synthea..."
+echo "   This may take 2–10 minutes depending on patient count"
+
+# Create native schema
+docker exec -i omop-postgres psql -U ohdsi_admin -d ohdsi <<EOF
+DROP SCHEMA IF EXISTS synthea_native CASCADE;
+CREATE SCHEMA synthea_native;
+GRANT ALL ON SCHEMA synthea_native TO ohdsi_admin;
+EOF
+
+# Run the full ETL
+docker compose --profile tools run --rm etl-synthea
+
 echo ""
-echo "⚠️  ETL process not yet implemented"
+echo "SUCCESS! Synthea data fully loaded into OMOP CDM"
+echo "   Patients: $(docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -At -c "SELECT COUNT(*) FROM cdm.person")"
+echo "   Conditions: $(docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -At -c "SELECT COUNT(*) FROM cdm.condition_occurrence")"
 echo ""
-echo "Your Synthea CSV files are ready at: $OUTPUT_DIR/csv/"
-echo ""
-echo "To load into OMOP CDM, you can:"
-echo "1. Use ETL-Synthea: https://github.com/OHDSI/ETL-Synthea"
-echo "2. Write custom loading scripts"
-echo ""
+echo "Open Atlas → http://localhost:8081"
+echo "Run Achilles: docker compose --profile tools up achilles"

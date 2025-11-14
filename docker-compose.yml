@@ -108,6 +108,40 @@ services:
       - tools  # Only starts when explicitly requested with --profile tools
     command: ["R", "-e", "Achilles::achilles()"]
 
+  # Runs ETL-Synthea in R inside Docker
+  etl-synthea:
+    image: r-base:latest
+    container_name: omop-etl-synthea
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./sample-data/synthea-output/csv:/synthea_csv:ro
+      - ./sample-data/vocabulary:/vocabulary:ro
+      - ./scripts/etl-synthea.R:/etl-synthea.R:ro
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-ohdsi}
+      POSTGRES_USER: ${POSTGRES_USER:-ohdsi_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      CDM_SCHEMA: cdm
+      SYNTHEA_SCHEMA: synthea_native
+      VOCAB_DIR: /vocabulary
+      SYNTHEA_CSV_DIR: /synthea_csv
+    working_dir: /
+    command: >
+      bash -c "
+        R -e '
+          options(repos = c(CRAN = \"https://cran.r-project.org\"));
+          if (!require(\"devtools\")) install.packages(\"devtools\");
+          if (!require(\"DatabaseConnector\")) install.packages(\"DatabaseConnector\");
+          devtools::install_github(\"OHDSI/ETL-Synthea\");
+          source(\"/etl-synthea.R\")
+        '
+      "
+    profiles:
+      - tools  # Only runs when you explicitly call it
+
 volumes:
   postgres-data:
     name: omop-postgres-data
