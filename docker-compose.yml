@@ -110,37 +110,25 @@ services:
 
   # Runs ETL-Synthea in R inside Docker
   etl-synthea:
-    image: r-base:latest
+    image: thehyve/ohdsi-etl-synthea:latest
+    platform: linux/amd64
     container_name: omop-etl-synthea
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./sample-data/synthea-output/csv:/synthea_csv:ro
-      - ./sample-data/vocabulary:/vocabulary:ro
-      - ./scripts/etl-synthea.R:/etl-synthea.R:ro
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_DB: ${POSTGRES_DB:-ohdsi}
-      POSTGRES_USER: ${POSTGRES_USER:-ohdsi_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      CDM_SCHEMA: cdm
-      SYNTHEA_SCHEMA: synthea_native
-      VOCAB_DIR: /vocabulary
-      SYNTHEA_CSV_DIR: /synthea_csv
-    working_dir: /
-    command: >
-      bash -c "
-        R -e '
-          options(repos = c(CRAN = \"https://cran.r-project.org\"));
-          if (!require(\"devtools\")) install.packages(\"devtools\");
-          if (!require(\"DatabaseConnector\")) install.packages(\"DatabaseConnector\");
-          devtools::install_github(\"OHDSI/ETL-Synthea\");
-          source(\"/etl-synthea.R\")
-        '
-      "
+      SYNTHEA_DB_URI: postgresql://ohdsi_admin:ohdsi@postgres:5432/ohdsi
+      SYNTHEA_RAW_SCHEMA: synthea_native
+      SYNTHEA_CDM_SCHEMA: cdm
+      SYNTHEA_FILE: /data/synthea_csv
+    volumes:
+      - ./sample-data/synthea-output/csv:/data/synthea_csv:ro
+      - ./scripts/etl-synthea.R:/custom-etl.R:ro
+    command: ["Rscript", "/custom-etl.R"]
+    networks:
+      - ohdsi-network
     profiles:
-      - tools  # Only runs when you explicitly call it
+      - tools
 
 volumes:
   postgres-data:

@@ -1,41 +1,68 @@
-# scripts/etl-synthea.R
+# ./scripts/etl-synthea.R — Official ETLSyntheaBuilder Functions (Corrected Signatures)
 library(ETLSyntheaBuilder)
 library(DatabaseConnector)
 
-cat("Connecting to database...\n")
-connDetails <- createConnectionDetails(
+cat("=== Synthea → OMOP CDM ETL (Official Functions) ===\n")
+
+uri <- Sys.getenv("SYNTHEA_DB_URI")
+if (uri == "") stop("Missing SYNTHEA_DB_URI")
+
+cd <- DatabaseConnector::createConnectionDetails(
   dbms = "postgresql",
-  server = paste0(Sys.getenv("POSTGRES_HOST"), "/", Sys.getenv("POSTGRES_DB")),
-  user = Sys.getenv("POSTGRES_USER"),
-  password = Sys.getenv("POSTGRES_PASSWORD"),
-  port = 5432
+  connectionString = uri
 )
 
-cdmSchema       <- Sys.getenv("CDM_SCHEMA")
-syntheaSchema   <- Sys.getenv("SYNTHEA_SCHEMA")
-vocabDir        <- Sys.getenv("VOCAB_DIR")
-syntheaCsvDir   <- Sys.getenv("SYNTHEA_CSV_DIR")
-cdmVersion      <- "5.4"
-syntheaVersion  <- "3.3.0"  # Change if you upgrade Synthea
+synthea_schema <- Sys.getenv("SYNTHEA_RAW_SCHEMA", "synthea_native")
+cdm_schema     <- Sys.getenv("SYNTHEA_CDM_SCHEMA", "cdm")
+csv_folder     <- Sys.getenv("SYNTHEA_FILE", "/data/synthea_csv")
+cdm_version    <- "5.4"
+synthea_version <- "3.2.0"
 
-cat("Creating native Synthea tables...\n")
-CreateSyntheaTables(connDetails, syntheaSchema, syntheaVersion)
+cat("Step 1/5: Creating Synthea tables in", synthea_schema, "\n")
+CreateSyntheaTables(
+  connectionDetails = cd,
+  syntheaSchema = synthea_schema,
+  syntheaVersion = synthea_version
+)
 
-cat("Loading Synthea CSV files...\n")
-LoadSyntheaTables(connDetails, syntheaSchema, syntheaCsvDir)
+cat("Step 2/5: Loading CSVs into", synthea_schema, "\n")
+LoadSyntheaTables(
+  connectionDetails = cd,
+  syntheaSchema = synthea_schema,
+  syntheaFileLoc = csv_folder
+)
 
-cat("Creating mapping and rollup tables...\n")
-CreateMapAndRollupTables(connDetails, cdmSchema, syntheaSchema, cdmVersion, syntheaVersion)
+cat("Step 3/5: Creating mapping/rollup tables (using pre-loaded vocab in", cdm_schema, ")\n")
+CreateMapAndRollupTables(
+  connectionDetails = cd,
+  cdmSchema = cdm_schema,
+  syntheaSchema = synthea_schema,
+  cdmVersion = cdm_version,
+  syntheaVersion = synthea_version
+)
 
-cat("Loading event tables into CDM (this may take a while)...\n")
-LoadEventTables(connDetails, cdmSchema, syntheaSchema, cdmVersion, syntheaVersion)
+cat("Step 4/5: Loading events into CDM tables in", cdm_schema, "\n")
+LoadEventTables(
+  connectionDetails = cd,
+  cdmSchema = cdm_schema,
+  syntheaSchema = synthea_schema,
+  cdmVersion = cdm_version,
+  syntheaVersion = synthea_version
+)
 
-cat("Adding useful indices...\n")
-CreateExtraIndices(connDetails, cdmSchema, syntheaSchema, syntheaVersion)
+cat("Step 5/5: Creating extra indices in", cdm_schema, "\n")
+CreateExtraIndices(
+  connectionDetails = cd,
+  cdmSchema = cdm_schema,
+  syntheaSchema = synthea_schema,
+  syntheaVersion = synthea_version
+)
 
-cat("ETL-Synthea completed successfully!\n")
-cat("You can now open Atlas: http://localhost:8081\n")
-cat("Total patients loaded:\n")
-con <- connect(connDetails)
-print(dbGetQuery(con, "SELECT COUNT(*) FROM cdm.person"))
-disconnect(con)
+cat("ETL COMPLETED SUCCESSFULLY!\n")
+
+con <- DatabaseConnector::connect(cd)
+raw_patients <- DBI::dbGetQuery(con, paste("SELECT COUNT(*) FROM", synthea_schema, ".patients"))[[1]]
+cdm_patients <- DBI::dbGetQuery(con, paste("SELECT COUNT(*) FROM", cdm_schema, ".person"))[[1]]
+cat("Raw patients loaded:", raw_patients, "\n")
+cat("CDM patients loaded:", cdm_patients, "\n")
+DBI::dbDisconnect(con)
