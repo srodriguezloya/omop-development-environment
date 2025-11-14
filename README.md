@@ -54,4 +54,17 @@ CMS SynPUF
 - Use case: More realistic clinical data
 
 
+### Achilles
+Achilles is configured as an on-demand service because Achilles is typically a long-running analytical job that you don't want running continuously.
+
+### To start the achilles service, you have three options:
+Option 1: Start it explicitly with the profile (recommended)
+```shell
+docker compose --profile tools up achilles
+```
+
+Option 2: Include the profile when starting all services
+```shell
+docker compose --profile tools up
+```
 
