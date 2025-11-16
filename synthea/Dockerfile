@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     libtiff5-dev \
     libjpeg-dev \
     git \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Install R package dependencies
@@ -23,11 +24,12 @@ RUN R -e "install.packages(c('remotes', 'DBI', 'dplyr', 'readr'), repos='https:/
 # Install OHDSI packages (SqlRender and DatabaseConnector from CRAN)
 RUN R -e "install.packages(c('SqlRender', 'DatabaseConnector'), repos='https://cloud.r-project.org/')"
 
-# Install ETL-Synthea by cloning (avoids GitHub API rate limits)
+# Install ETL-Synthea by downloading tarball directly (avoids git auth issues)
 RUN cd /tmp && \
-    git clone --depth 1 https://github.com/OHDSI/ETLSyntheaBuilder.git && \
-    R -e "remotes::install_local('/tmp/ETLSyntheaBuilder', upgrade='never', dependencies=FALSE)" && \
-    rm -rf /tmp/ETLSyntheaBuilder
+    curl -L -o etl-synthea.tar.gz https://github.com/OHDSI/ETLSyntheaBuilder/archive/refs/heads/master.tar.gz && \
+    tar -xzf etl-synthea.tar.gz && \
+    R -e "remotes::install_local('/tmp/ETLSyntheaBuilder-master', upgrade='never', dependencies=FALSE)" && \
+    rm -rf /tmp/ETLSyntheaBuilder-master /tmp/etl-synthea.tar.gz
 
 # Verify installation
 RUN R -e "library(ETLSyntheaBuilder); cat('ETLSyntheaBuilder version:', as.character(packageVersion('ETLSyntheaBuilder')), '\n')"
