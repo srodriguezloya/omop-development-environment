@@ -18,16 +18,21 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install R dependencies step by step
-RUN R -e "install.packages('remotes', repos='https://cloud.r-project.org/')"
-RUN R -e "install.packages(c('DBI', 'dplyr', 'readr', 'stringr', 'lubridate', 'data.table'), repos='https://cloud.r-project.org/')"
-RUN R -e "install.packages('httr', repos='https://cloud.r-project.org/', dependencies=TRUE)"
-RUN R -e "install.packages(c('SqlRender', 'DatabaseConnector'), repos='https://cloud.r-project.org/')"
+# Install base R packages
+RUN R -e "install.packages('remotes', repos='https://cloud.r-project.org/')" && \
+    R -e "install.packages(c('DBI', 'dplyr', 'readr', 'stringr', 'lubridate', 'data.table', 'httr'), repos='https://cloud.r-project.org/')"
 
-# Install CommonDataModel from GitHub
-RUN R -e "remotes::install_github('OHDSI/CommonDataModel', upgrade='never', dependencies=FALSE)"
+# Install OHDSI packages and verify each one
+RUN R -e "install.packages('SqlRender', repos='https://cloud.r-project.org/')" && \
+    R -e "library(SqlRender); cat('SqlRender OK\n')"
 
-# Install ETL-Synthea
+RUN R -e "install.packages('DatabaseConnector', repos='https://cloud.r-project.org/')" && \
+    R -e "library(DatabaseConnector); cat('DatabaseConnector OK\n')"
+
+RUN R -e "remotes::install_github('OHDSI/CommonDataModel', upgrade='never')" && \
+    R -e "library(CommonDataModel); cat('CommonDataModel OK\n')"
+
+# Now install ETL-Synthea
 RUN cd /tmp && \
     wget -O etl-synthea.tar.gz https://github.com/OHDSI/ETL-Synthea/tarball/master && \
     tar -xzf etl-synthea.tar.gz && \
@@ -35,8 +40,8 @@ RUN cd /tmp && \
     R CMD INSTALL /tmp/ETL-Synthea && \
     rm -rf /tmp/ETL-Synthea /tmp/etl-synthea.tar.gz
 
-# Verify
-RUN R -e "library(ETLSyntheaBuilder); cat('ETLSyntheaBuilder installed successfully!\n')"
+# Final verification
+RUN R -e "library(ETLSyntheaBuilder); cat('SUCCESS: ETLSyntheaBuilder installed!\n')"
 
 WORKDIR /app
 CMD ["R"]
