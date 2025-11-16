@@ -18,14 +18,14 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install R package dependencies from CRAN
-RUN R -e "install.packages(c('remotes', 'DBI', 'dplyr', 'readr', 'stringr', 'lubridate', 'data.table', 'httr'), repos='https://cloud.r-project.org/')"
-
-# Install OHDSI packages
+# Install R dependencies step by step
+RUN R -e "install.packages('remotes', repos='https://cloud.r-project.org/')"
+RUN R -e "install.packages(c('DBI', 'dplyr', 'readr', 'stringr', 'lubridate', 'data.table'), repos='https://cloud.r-project.org/')"
+RUN R -e "install.packages('httr', repos='https://cloud.r-project.org/', dependencies=TRUE)"
 RUN R -e "install.packages(c('SqlRender', 'DatabaseConnector'), repos='https://cloud.r-project.org/')"
 
 # Install CommonDataModel from GitHub
-RUN R -e "remotes::install_github('OHDSI/CommonDataModel', upgrade='never')"
+RUN R -e "remotes::install_github('OHDSI/CommonDataModel', upgrade='never', dependencies=FALSE)"
 
 # Install ETL-Synthea
 RUN cd /tmp && \
@@ -35,8 +35,8 @@ RUN cd /tmp && \
     R CMD INSTALL /tmp/ETL-Synthea && \
     rm -rf /tmp/ETL-Synthea /tmp/etl-synthea.tar.gz
 
-# Verify installation
-RUN R -e "library(ETLSyntheaBuilder); cat('ETLSyntheaBuilder version:', as.character(packageVersion('ETLSyntheaBuilder')), '\n')"
+# Verify
+RUN R -e "library(ETLSyntheaBuilder); cat('ETLSyntheaBuilder installed successfully!\n')"
 
 WORKDIR /app
 CMD ["R"]
