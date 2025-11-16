@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     libtiff5-dev \
     libjpeg-dev \
     git \
+    curl \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,7 +25,7 @@ RUN R -e "install.packages(c('remotes', 'DBI', 'dplyr', 'readr'), repos='https:/
 # Install OHDSI packages (SqlRender and DatabaseConnector from CRAN)
 RUN R -e "install.packages(c('SqlRender', 'DatabaseConnector'), repos='https://cloud.r-project.org/')"
 
-# Install ETL-Synthea by downloading tarball directly (avoids git auth issues)
+# Install ETL-Synthea by downloading tarball directly
 RUN cd /tmp && \
     curl -L -o etl-synthea.tar.gz https://github.com/OHDSI/ETLSyntheaBuilder/archive/refs/heads/master.tar.gz && \
     tar -xzf etl-synthea.tar.gz && \
