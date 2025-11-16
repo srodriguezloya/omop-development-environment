@@ -19,29 +19,36 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install base R packages
-RUN R -e "install.packages('remotes', repos='https://cloud.r-project.org/')" && \
-    R -e "install.packages(c('DBI', 'dplyr', 'readr', 'stringr', 'lubridate', 'data.table', 'httr'), repos='https://cloud.r-project.org/')"
+RUN R -e "install.packages('remotes', repos='https://cloud.r-project.org/')"
+RUN R -e "install.packages(c('DBI', 'dplyr', 'readr'), repos='https://cloud.r-project.org/')"
 
-# Install OHDSI packages and verify each one
-RUN R -e "install.packages('SqlRender', repos='https://cloud.r-project.org/')" && \
-    R -e "library(SqlRender); cat('SqlRender OK\n')"
+# Install SqlRender with error output visible
+RUN R -e " \
+    options(warn=2); \
+    install.packages('SqlRender', repos='https://cloud.r-project.org/', dependencies=TRUE); \
+    if (!require('SqlRender', quietly=TRUE)) { \
+        cat('FAILED TO INSTALL SqlRender\n'); \
+        quit(status=1); \
+    } else { \
+        cat('SqlRender installed successfully\n'); \
+    } \
+"
 
-RUN R -e "install.packages('DatabaseConnector', repos='https://cloud.r-project.org/')" && \
-    R -e "library(DatabaseConnector); cat('DatabaseConnector OK\n')"
+# Install DatabaseConnector
+RUN R -e " \
+    install.packages('DatabaseConnector', repos='https://cloud.r-project.org/', dependencies=TRUE); \
+    library(DatabaseConnector); \
+    cat('DatabaseConnector OK\n'); \
+"
 
-RUN R -e "remotes::install_github('OHDSI/CommonDataModel', upgrade='never')" && \
-    R -e "library(CommonDataModel); cat('CommonDataModel OK\n')"
+# Install CommonDataModel and ETLSyntheaBuilder together from GitHub
+RUN R -e " \
+    remotes::install_github('OHDSI/CommonDataModel', upgrade='never'); \
+    remotes::install_github('OHDSI/ETL-Synthea', upgrade='never'); \
+"
 
-# Now install ETL-Synthea
-RUN cd /tmp && \
-    wget -O etl-synthea.tar.gz https://github.com/OHDSI/ETL-Synthea/tarball/master && \
-    tar -xzf etl-synthea.tar.gz && \
-    mv OHDSI-ETL-Synthea-* ETL-Synthea && \
-    R CMD INSTALL /tmp/ETL-Synthea && \
-    rm -rf /tmp/ETL-Synthea /tmp/etl-synthea.tar.gz
-
-# Final verification
-RUN R -e "library(ETLSyntheaBuilder); cat('SUCCESS: ETLSyntheaBuilder installed!\n')"
+# Verify
+RUN R -e "library(ETLSyntheaBuilder); cat('SUCCESS!\n')"
 
 WORKDIR /app
 CMD ["R"]
