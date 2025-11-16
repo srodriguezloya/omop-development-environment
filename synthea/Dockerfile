@@ -1,6 +1,7 @@
+# Modern ETL-Synthea Dockerfile
 FROM rocker/r-ver:4.4.1
 
-# Install system dependencies for OHDSI R packages
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     libssl-dev \
@@ -17,25 +18,20 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install R package dependencies
+# Install R packages
 RUN R -e "install.packages(c('remotes', 'DBI', 'dplyr', 'readr'), repos='https://cloud.r-project.org/')"
-
-# Install OHDSI packages (SqlRender and DatabaseConnector from CRAN)
 RUN R -e "install.packages(c('SqlRender', 'DatabaseConnector'), repos='https://cloud.r-project.org/')"
 
-# Install ETL-Synthea by downloading tarball with wget
+# Install ETL-Synthea - Note: correct repo name is ETL-Synthea (with hyphen)
 RUN cd /tmp && \
-    wget -O etl-synthea.tar.gz https://github.com/OHDSI/ETLSyntheaBuilder/tarball/master && \
+    wget -O etl-synthea.tar.gz https://github.com/OHDSI/ETL-Synthea/tarball/master && \
     tar -xzf etl-synthea.tar.gz && \
-    mv OHDSI-ETLSyntheaBuilder-* ETLSyntheaBuilder && \
-    R -e "remotes::install_local('/tmp/ETLSyntheaBuilder', upgrade='never', dependencies=FALSE)" && \
-    rm -rf /tmp/ETLSyntheaBuilder /tmp/etl-synthea.tar.gz
+    mv OHDSI-ETL-Synthea-* ETL-Synthea && \
+    R -e "remotes::install_local('/tmp/ETL-Synthea', upgrade='never', dependencies=FALSE)" && \
+    rm -rf /tmp/ETL-Synthea /tmp/etl-synthea.tar.gz
 
-# Verify installation
-RUN R -e "library(ETLSyntheaBuilder); cat('ETLSyntheaBuilder version:', as.character(packageVersion('ETLSyntheaBuilder')), '\n')"
+# Verify
+RUN R -e "library(ETLSyntheaBuilder); cat('ETLSyntheaBuilder installed!\n')"
 
-# Set working directory
 WORKDIR /app
-
-# Default command
 CMD ["R"]
