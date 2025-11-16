@@ -46,7 +46,7 @@ echo ""
 
 # Pull Docker images
 echo "📦 Pulling Docker images (this may take a few minutes)..."
-docker-compose pull
+docker compose pull
 echo "✅ Docker images pulled"
 echo ""
 
