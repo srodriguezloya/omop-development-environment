@@ -1,7 +1,7 @@
 # Modern ETL-Synthea Dockerfile
 FROM rocker/r-ver:4.4.1
 
-# Install system dependencies
+# Install system dependencies INCLUDING Java
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     libssl-dev \
@@ -16,39 +16,29 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     wget \
     ca-certificates \
+    default-jdk \
     && rm -rf /var/lib/apt/lists/*
+
+# Configure Java for R
+RUN R CMD javareconf
 
 # Install base R packages
 RUN R -e "install.packages('remotes', repos='https://cloud.r-project.org/')"
 RUN R -e "install.packages(c('DBI', 'dplyr', 'readr'), repos='https://cloud.r-project.org/')"
 
-# Install SqlRender with error output visible
-RUN R -e " \
-    options(warn=2); \
-    install.packages('SqlRender', repos='https://cloud.r-project.org/', dependencies=TRUE); \
-    if (!require('SqlRender', quietly=TRUE)) { \
-        cat('FAILED TO INSTALL SqlRender\n'); \
-        quit(status=1); \
-    } else { \
-        cat('SqlRender installed successfully\n'); \
-    } \
-"
+# Install rJava explicitly first
+RUN R -e "install.packages('rJava', repos='https://cloud.r-project.org/')"
 
-# Install DatabaseConnector
-RUN R -e " \
-    install.packages('DatabaseConnector', repos='https://cloud.r-project.org/', dependencies=TRUE); \
-    library(DatabaseConnector); \
-    cat('DatabaseConnector OK\n'); \
-"
+# Install OHDSI packages
+RUN R -e "install.packages('SqlRender', repos='https://cloud.r-project.org/')"
+RUN R -e "install.packages('DatabaseConnector', repos='https://cloud.r-project.org/')"
 
-# Install CommonDataModel and ETLSyntheaBuilder together from GitHub
-RUN R -e " \
-    remotes::install_github('OHDSI/CommonDataModel', upgrade='never'); \
-    remotes::install_github('OHDSI/ETL-Synthea', upgrade='never'); \
-"
+# Install from GitHub
+RUN R -e "remotes::install_github('OHDSI/CommonDataModel', upgrade='never')"
+RUN R -e "remotes::install_github('OHDSI/ETL-Synthea', upgrade='never')"
 
 # Verify
-RUN R -e "library(ETLSyntheaBuilder); cat('SUCCESS!\n')"
+RUN R -e "library(ETLSyntheaBuilder); cat('SUCCESS: ETLSyntheaBuilder installed!\n')"
 
 WORKDIR /app
 CMD ["R"]
