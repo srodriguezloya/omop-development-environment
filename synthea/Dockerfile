@@ -18,22 +18,22 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install R package dependencies
-# Install in order of dependencies to avoid conflicts
 RUN R -e "install.packages(c('remotes', 'DBI', 'dplyr', 'readr'), repos='https://cloud.r-project.org/')"
 
-# Install OHDSI packages from CRAN/GitHub
-# SqlRender and DatabaseConnector are on CRAN, use those versions (more stable)
+# Install OHDSI packages (SqlRender and DatabaseConnector from CRAN)
 RUN R -e "install.packages(c('SqlRender', 'DatabaseConnector'), repos='https://cloud.r-project.org/')"
 
-# Install ETL-Synthea from GitHub (latest stable)
-# Use upgrade='never' to avoid reinstalling dependencies
-RUN R -e "remotes::install_github('OHDSI/ETLSyntheaBuilder', upgrade='never')"
+# Install ETL-Synthea by cloning (avoids GitHub API rate limits)
+RUN cd /tmp && \
+    git clone --depth 1 https://github.com/OHDSI/ETLSyntheaBuilder.git && \
+    R -e "remotes::install_local('/tmp/ETLSyntheaBuilder', upgrade='never', dependencies=FALSE)" && \
+    rm -rf /tmp/ETLSyntheaBuilder
 
 # Verify installation
 RUN R -e "library(ETLSyntheaBuilder); cat('ETLSyntheaBuilder version:', as.character(packageVersion('ETLSyntheaBuilder')), '\n')"
 
 # Set working directory
-WORKDIR /etl
+WORKDIR /app
 
 # Default command
 CMD ["R"]
