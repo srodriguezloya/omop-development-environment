@@ -110,25 +110,27 @@ services:
 
   # Runs ETL-Synthea in R inside Docker
   etl-synthea:
-    image: thehyve/ohdsi-etl-synthea:latest
-    platform: linux/amd64
+    build:
+      context: ./synthea
+      dockerfile: Dockerfile
     container_name: omop-etl-synthea
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      SYNTHEA_DB_URI: postgresql://ohdsi_admin:ohdsi@postgres:5432/ohdsi
-      SYNTHEA_RAW_SCHEMA: synthea_native
-      SYNTHEA_CDM_SCHEMA: cdm
+      SYNTHEA_DB_URI: postgresql://${POSTGRES_USER:-ohdsi_admin}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-ohdsi}
+      SYNTHEA_RAW_SCHEMA: ${SYNTHEA_SCHEMA:-synthea_native}
+      SYNTHEA_CDM_SCHEMA: ${DATASOURCE_CDM_SCHEMA:-cdm}
       SYNTHEA_FILE: /data/synthea_csv
     volumes:
       - ./sample-data/synthea-output/csv:/data/synthea_csv:ro
-      - ./scripts/etl-synthea.R:/custom-etl.R:ro
-    command: ["Rscript", "/custom-etl.R"]
+      - ./scripts/etl-synthea.R:/app/etl-synthea.R:ro
     networks:
       - ohdsi-network
     profiles:
       - tools
+    command: [ "Rscript", "/app/etl-synthea.R" ]
+    restart: "no"  # Don't auto-restart - this is a one-time job
 
 volumes:
   postgres-data:

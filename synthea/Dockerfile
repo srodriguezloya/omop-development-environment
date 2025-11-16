@@ -1,49 +1,39 @@
-# Custom OHDSI ETL-Synthea Image (v2.1.0, ARM64-Safe)
+# Modern ETL-Synthea Dockerfile
 FROM rocker/r-ver:4.4.1
 
-# Install system dependencies (Java + libs for rJava/OHDSI)
-USER root
-RUN apt-get update -qq && \
-    apt-get install -y --no-install-recommends \
-        openjdk-11-jdk \
-        liblzma-dev \
-        libbz2-dev \
-        libpcre2-dev \
-        libcurl4-openssl-dev \
-        libicu-dev \
-        libssl-dev \
-        libxml2-dev \
-        r-cran-rmarkdown && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install system dependencies for OHDSI R packages
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    libssl-dev \
+    libcurl4-openssl-dev \
+    libxml2-dev \
+    libfontconfig1-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libjpeg-dev \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-# Switch to R user and install R packages step-by-step (ARM64-safe)
-USER 1000
+# Install R package dependencies
+# Install in order of dependencies to avoid conflicts
+RUN R -e "install.packages(c('remotes', 'DBI', 'dplyr', 'readr'), repos='https://cloud.r-project.org/')"
 
-# Step 1: Core R deps + rJava (with --no-multiarch for ARM64)
-RUN R -e "\
-  options(repos = 'https://cran.r-project.org', Ncpus = parallel::detectCores()); \
-  install.packages(c('remotes', 'DBI'), dependencies = TRUE); \
-  install.packages('rJava', dependencies = TRUE, INSTALL_opts = '--no-multiarch') \
-"
+# Install OHDSI packages from CRAN/GitHub
+# SqlRender and DatabaseConnector are on CRAN, use those versions (more stable)
+RUN R -e "install.packages(c('SqlRender', 'DatabaseConnector'), repos='https://cloud.r-project.org/')"
 
-# Step 2: Reconfigure Java after rJava install
-RUN R CMD javareconf
+# Install ETL-Synthea from GitHub (latest stable)
+# Use upgrade='never' to avoid reinstalling dependencies
+RUN R -e "remotes::install_github('OHDSI/ETLSyntheaBuilder', upgrade='never')"
 
-# Step 3: Install OHDSI packages from GitHub (latest master, no deps to avoid loops)
-RUN R -e "\
-  options(repos = 'https://cran.r-project.org', Ncpus = parallel::detectCores()); \
-  remotes::install_github(c( \
-    'OHDSI/SqlRender@master', \
-    'OHDSI/DatabaseConnector@master', \
-    'OHDSI/ETLSyntheaBuilder@master' \
-  ), upgrade = 'never', dependencies = FALSE); \
-  library(ETLSyntheaBuilder); \
-  cat('ETLSyntheaBuilder version:', as.character(packageVersion('ETLSyntheaBuilder')), '\\n') \
-"
+# Verify installation
+RUN R -e "library(ETLSyntheaBuilder); cat('ETLSyntheaBuilder version:', as.character(packageVersion('ETLSyntheaBuilder')), '\n')"
 
 # Set working directory
-WORKDIR /app
+WORKDIR /etl
 
-# Default command (overridden in compose)
-CMD ["Rscript", "-e", "cat('ETL-Synthea Ready!'); q()"]
+# Default command
+CMD ["R"]
