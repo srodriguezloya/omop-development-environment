@@ -1,4 +1,3 @@
-# Modern ETL-Synthea Dockerfile
 FROM rocker/r-ver:4.4.1
 
 # Install system dependencies for OHDSI R packages
@@ -14,8 +13,7 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libtiff5-dev \
     libjpeg-dev \
-    git \
-    curl \
+    wget \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -25,12 +23,13 @@ RUN R -e "install.packages(c('remotes', 'DBI', 'dplyr', 'readr'), repos='https:/
 # Install OHDSI packages (SqlRender and DatabaseConnector from CRAN)
 RUN R -e "install.packages(c('SqlRender', 'DatabaseConnector'), repos='https://cloud.r-project.org/')"
 
-# Install ETL-Synthea by downloading tarball directly
+# Install ETL-Synthea by downloading tarball with wget
 RUN cd /tmp && \
-    curl -L -o etl-synthea.tar.gz https://github.com/OHDSI/ETLSyntheaBuilder/archive/refs/heads/master.tar.gz && \
+    wget -O etl-synthea.tar.gz https://github.com/OHDSI/ETLSyntheaBuilder/tarball/master && \
     tar -xzf etl-synthea.tar.gz && \
-    R -e "remotes::install_local('/tmp/ETLSyntheaBuilder-master', upgrade='never', dependencies=FALSE)" && \
-    rm -rf /tmp/ETLSyntheaBuilder-master /tmp/etl-synthea.tar.gz
+    mv OHDSI-ETLSyntheaBuilder-* ETLSyntheaBuilder && \
+    R -e "remotes::install_local('/tmp/ETLSyntheaBuilder', upgrade='never', dependencies=FALSE)" && \
+    rm -rf /tmp/ETLSyntheaBuilder /tmp/etl-synthea.tar.gz
 
 # Verify installation
 RUN R -e "library(ETLSyntheaBuilder); cat('ETLSyntheaBuilder version:', as.character(packageVersion('ETLSyntheaBuilder')), '\n')"
