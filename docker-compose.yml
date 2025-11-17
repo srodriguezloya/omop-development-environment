@@ -70,7 +70,7 @@ services:
     image: ohdsi/atlas:latest
     container_name: omop-atlas
     environment:
-      WEBAPI_URL: ${WEBAPI_URL:-http:/localshot:8080/WebAPI/}
+      WEBAPI_URL: ${WEBAPI_URL:-http://localhost:8080/WebAPI/}
       ATLAS_INSTANCE_NAME: ${ATLAS_INSTANCE_NAME:-OMOP Development}
       ATLAS_COHORT_COMPARISON_RESULTS_ENABLED: ${ATLAS_COHORT_COMPARISON_RESULTS_ENABLED:-true}
       ATLAS_USER_AUTH_ENABLED: ${ATLAS_USER_AUTH_ENABLED:-false}
