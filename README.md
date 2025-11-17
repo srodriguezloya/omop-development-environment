@@ -67,4 +67,3 @@ Option 2: Include the profile when starting all services
 ```shell
 docker compose --profile tools up
 ```
-
