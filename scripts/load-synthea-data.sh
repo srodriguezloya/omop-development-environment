@@ -100,24 +100,41 @@ else
 
     if [ "$VOCAB_COUNT" -eq 0 ]; then
         echo "📥 Loading vocabularies into database (this may take 5-10 minutes)..."
+        echo ""
 
         # Copy vocabulary files to container
         docker cp "$VOCAB_DIR/." omop-postgres:/tmp/vocabulary/
 
-        # Load vocabularies
-        docker exec omop-postgres psql -U ohdsi_admin -d ohdsi <<VOCABSQL
-\copy cdm.concept FROM '/tmp/vocabulary/CONCEPT.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';
-\copy cdm.vocabulary FROM '/tmp/vocabulary/VOCABULARY.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';
-\copy cdm.domain FROM '/tmp/vocabulary/DOMAIN.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';
-\copy cdm.concept_class FROM '/tmp/vocabulary/CONCEPT_CLASS.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';
-\copy cdm.concept_relationship FROM '/tmp/vocabulary/CONCEPT_RELATIONSHIP.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';
-\copy cdm.relationship FROM '/tmp/vocabulary/RELATIONSHIP.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';
-\copy cdm.concept_synonym FROM '/tmp/vocabulary/CONCEPT_SYNONYM.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';
-\copy cdm.concept_ancestor FROM '/tmp/vocabulary/CONCEPT_ANCESTOR.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';
-\copy cdm.drug_strength FROM '/tmp/vocabulary/DRUG_STRENGTH.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';
-VOCABSQL
+        # Load vocabularies one by one with progress indicators
+        echo "  Loading CONCEPT (1/9)..."
+        docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -c "\copy cdm.concept FROM '/tmp/vocabulary/CONCEPT.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';"
+
+        echo "  Loading VOCABULARY (2/9)..."
+        docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -c "\copy cdm.vocabulary FROM '/tmp/vocabulary/VOCABULARY.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';"
+
+        echo "  Loading DOMAIN (3/9)..."
+        docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -c "\copy cdm.domain FROM '/tmp/vocabulary/DOMAIN.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';"
+
+        echo "  Loading CONCEPT_CLASS (4/9)..."
+        docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -c "\copy cdm.concept_class FROM '/tmp/vocabulary/CONCEPT_CLASS.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';"
+
+        echo "  Loading RELATIONSHIP (5/9)..."
+        docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -c "\copy cdm.relationship FROM '/tmp/vocabulary/RELATIONSHIP.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';"
+
+        echo "  Loading CONCEPT_SYNONYM (6/9 - may take 2-3 minutes)..."
+        docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -c "\copy cdm.concept_synonym FROM '/tmp/vocabulary/CONCEPT_SYNONYM.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';"
+
+        echo "  Loading CONCEPT_RELATIONSHIP (7/9 - may take 3-5 minutes)..."
+        docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -c "\copy cdm.concept_relationship FROM '/tmp/vocabulary/CONCEPT_RELATIONSHIP.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';"
+
+        echo "  Loading CONCEPT_ANCESTOR (8/9 - may take 3-5 minutes)..."
+        docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -c "\copy cdm.concept_ancestor FROM '/tmp/vocabulary/CONCEPT_ANCESTOR.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';"
+
+        echo "  Loading DRUG_STRENGTH (9/9)..."
+        docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -c "\copy cdm.drug_strength FROM '/tmp/vocabulary/DRUG_STRENGTH.csv' WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';"
 
         VOCAB_COUNT=$(docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -At -c "SELECT COUNT(*) FROM cdm.concept")
+        echo ""
         echo "✅ Vocabularies loaded: $VOCAB_COUNT concepts"
     else
         echo "✅ Vocabularies already loaded in database: $VOCAB_COUNT concepts"
@@ -150,6 +167,7 @@ echo "   Patients: $(docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -At 
 echo "   Conditions: $(docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -At -c "SELECT COUNT(*) FROM cdm.condition_occurrence")"
 echo "   Drugs: $(docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -At -c "SELECT COUNT(*) FROM cdm.drug_exposure")"
 echo "   Procedures: $(docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -At -c "SELECT COUNT(*) FROM cdm.procedure_occurrence")"
+echo "   Measurements: $(docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -At -c "SELECT COUNT(*) FROM cdm.measurement")"
 echo ""
 echo "Next steps:"
 echo "  • Open Atlas: https://atlas.chava.cc"
