@@ -118,7 +118,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      SYNTHEA_DB_URI: postgresql://${POSTGRES_USER:-ohdsi_admin}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-ohdsi}
+      SYNTHEA_DB_URI: jdbc:postgresql://postgres:${POSTGRES_PORT}/${POSTGRES_DB:-ohdsi}?user=${POSTGRES_USER:-ohdsi_admin}&password=${POSTGRES_PASSWORD:-changeme}
       SYNTHEA_RAW_SCHEMA: ${SYNTHEA_SCHEMA:-synthea_native}
       SYNTHEA_CDM_SCHEMA: ${DATASOURCE_CDM_SCHEMA:-cdm}
       SYNTHEA_FILE: /data/synthea_csv
