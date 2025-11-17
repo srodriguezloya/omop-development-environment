@@ -97,8 +97,8 @@ services:
     container_name: omop-achilles
     environment:
       ACHILLES_DB_URI: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ohdsi}?user=${POSTGRES_USER:-ohdsi_admin}&password=${POSTGRES_PASSWORD:-ohdsi}
-      ACHILLES_CDM_SCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
-      ACHILLES_VOCAB_SCHEMA: ${DATASOURCE_OHDSI_SCHEMA:-ohdsi}
+      ACHILLES_CDM_SCHEMA: ${ACHILLES_CDM_SCHEMA:-cdm}
+      ACHILLES_VOCAB_SCHEMA: ${ACHILLES_VOCAB_SCHEMA:-cdm}
       ACHILLES_RESULTS_SCHEMA: ${ACHILLES_RESULTS_SCHEMA:-ohdsi_results}
       ACHILLES_CDM_VERSION: ${OMOP_CDM_VERSION:-5.4}
     depends_on:
