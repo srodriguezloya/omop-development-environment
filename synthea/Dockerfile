@@ -37,6 +37,13 @@ RUN R -e "install.packages('DatabaseConnector', repos='https://cloud.r-project.o
 RUN R -e "remotes::install_github('OHDSI/CommonDataModel', upgrade='never')"
 RUN R -e "remotes::install_github('OHDSI/ETL-Synthea', upgrade='never')"
 
+# Download PostgreSQL JDBC driver
+RUN mkdir -p /opt/jdbc && \
+    wget -O /opt/jdbc/postgresql.jar https://jdbc.postgresql.org/download/postgresql-42.7.4.jar
+
+# Set JDBC driver path as environment variable
+ENV DATABASECONNECTOR_JAR_FOLDER=/opt/jdbc
+
 # Verify
 RUN R -e "library(ETLSyntheaBuilder); cat('SUCCESS: ETLSyntheaBuilder installed!\n')"
 
