@@ -89,6 +89,12 @@ The script will:
 
 **First run with vocabularies takes 10-15 minutes.** Subsequent runs are faster.
 
+### Run Achilles
+
+```shell
+docker compose --profile tools up achilles
+```
+
 ### Access the Services
 
 | Service | URL | Description |
