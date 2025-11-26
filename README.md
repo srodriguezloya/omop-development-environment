@@ -8,8 +8,6 @@ A complete OHDSI/OMOP CDM development stack with Docker. This environment provid
 
 - **Docker** and **Docker Compose** installed
 - **Java 11+** (for Synthea data generation)
-- **75GB+ disk space** (50GB for vocabularies, 25GB for Docker volumes)
-- Ubuntu/Linux server or Mac with Docker Desktop
 
 ### Configure Environment
 
