@@ -170,6 +170,6 @@ echo "   Procedures: $(docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -A
 echo "   Measurements: $(docker exec omop-postgres psql -U ohdsi_admin -d ohdsi -At -c "SELECT COUNT(*) FROM cdm.measurement")"
 echo ""
 echo "Next steps:"
-echo "  • Open Atlas: https://atlas.chava.cc"
 echo "  • Run Achilles: docker compose --profile tools up achilles"
+echo "  • Open Atlas"
 echo ""
