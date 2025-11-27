@@ -2,5 +2,5 @@
 # stop.sh - Stop the OMOP development environment
 
 echo "Stopping OMOP Environment..."
-docker-compose down
+docker compose down
 echo "✅ Services stopped"
