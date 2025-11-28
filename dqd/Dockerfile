@@ -8,10 +8,17 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     git \
     default-jdk \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure Java for R
 RUN R CMD javareconf
+
+# Create directory for JDBC drivers
+RUN mkdir -p /opt/jdbc_drivers
+
+# Download PostgreSQL JDBC driver
+RUN wget -O /opt/jdbc_drivers/postgresql-42.7.1.jar https://jdbc.postgresql.org/download/postgresql-42.7.1.jar
 
 # Install R packages
 RUN R -e "install.packages(c('remotes', 'rJava', 'DatabaseConnector', 'SqlRender', 'jsonlite', 'httr', 'shiny'), repos='https://cloud.r-project.org/')"

@@ -14,13 +14,17 @@ cdmVersion <- Sys.getenv("CDM_VERSION", "5.4")
 outputFolder <- Sys.getenv("OUTPUT_FOLDER", "/dqd/results")
 outputFile <- Sys.getenv("OUTPUT_FILE", "dqd_results.json")
 
+# Path to JDBC drivers
+pathToDriver <- "/opt/jdbc_drivers"
+
 # Create connection details
 connectionDetails <- createConnectionDetails(
   dbms = dbms,
   server = server,
   port = port,
   user = user,
-  password = password
+  password = password,
+  pathToDriver = pathToDriver
 )
 
 # Run Data Quality Dashboard
