@@ -20,8 +20,8 @@ RUN mkdir -p /opt/jdbc_drivers
 # Download PostgreSQL JDBC driver
 RUN wget -O /opt/jdbc_drivers/postgresql-42.7.1.jar https://jdbc.postgresql.org/download/postgresql-42.7.1.jar
 
-# Install R packages
-RUN R -e "install.packages(c('remotes', 'rJava', 'DatabaseConnector', 'SqlRender', 'jsonlite', 'httr', 'shiny'), repos='https://cloud.r-project.org/')"
+# Install R packages (including all Shiny dependencies)
+RUN R -e "install.packages(c('remotes', 'rJava', 'DatabaseConnector', 'SqlRender', 'jsonlite', 'httr', 'shiny', 'htmltools', 'httpuv', 'mime', 'sourcetools', 'xtable', 'fontawesome', 'bslib', 'cachem', 'sass', 'jquerylib'), repos='https://cloud.r-project.org/')"
 
 # Install OHDSI packages
 RUN R -e "remotes::install_github('OHDSI/DataQualityDashboard')"
@@ -38,5 +38,8 @@ COPY run-dqd.R /dqd/run-dqd.R
 
 # Expose port for Shiny app (if you want to view results interactively)
 EXPOSE 3838
+
+# Set Shiny host to listen on all interfaces
+ENV SHINY_HOST=0.0.0.0
 
 CMD ["R", "--vanilla", "-f", "/dqd/run-dqd.R"]
