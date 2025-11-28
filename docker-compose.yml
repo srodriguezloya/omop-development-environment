@@ -136,9 +136,43 @@ services:
     command: [ "Rscript", "/app/etl-synthea.R" ]
     restart: "no"  # Don't auto-restart - this is a one-time job
 
+  dqd:
+    build:
+      context: ./dqd
+      dockerfile: Dockerfile
+    container_name: omop-dqd
+    environment:
+      DBMS: postgresql
+      DB_SERVER: postgres/${POSTGRES_DB:-ohdsi}
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-ohdsi_admin}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      CDM_SCHEMA: ${DATASOURCE_CDM_SCHEMA:-cdm}
+      RESULTS_SCHEMA: ${DATASOURCE_RESULTS_SCHEMA:-ohdsi_results}
+      CDM_VERSION: "${OMOP_CDM_VERSION:-5.4}"
+      CDM_SOURCE_NAME: "OMOP Development CDM"
+      OUTPUT_FOLDER: /dqd/results
+      OUTPUT_FILE: dqd_results.json
+      VIEW_RESULTS: "true"  # Set to "true" to launch Shiny app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ohdsi-network
+    volumes:
+      - dqd-results:/dqd/results
+    ports:
+      - "3838:3838"  # For Shiny app if VIEW_RESULTS=true
+    profiles:
+      - tools  # This makes it optional - run with: docker compose --profile tools up
+    command: ["R", "--vanilla", "-f", "/dqd/run-dqd.R"]
+
 volumes:
   postgres-data:
     name: omop-postgres-data
+    driver: local
+  dqd-results:
+    name: omop-dqd-results
     driver: local
 
 networks:
