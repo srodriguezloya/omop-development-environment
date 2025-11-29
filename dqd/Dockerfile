@@ -45,7 +45,6 @@ RUN mkdir -p /dqd/results /dqd/config
 
 # Copy execution scripts
 COPY run-dqd.R /dqd/run-dqd.R
-COPY view-dqd-shiny.R /dqd/view-dqd-shiny.R
 
 # Expose port for Shiny app
 EXPOSE 3838
