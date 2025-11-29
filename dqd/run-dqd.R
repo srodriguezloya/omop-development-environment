@@ -59,8 +59,16 @@ tryCatch({
   # Optionally view results
   if (Sys.getenv("VIEW_RESULTS", "false") == "true") {
     cat("\nLaunching Shiny app to view results...\n")
+    cat("==================================================\n")
+    cat("Access the dashboard at: http://localhost:3838\n")
+    cat("==================================================\n")
+    cat("Press Ctrl+C to stop the Shiny server\n\n")
+
     DataQualityDashboard::viewDqDashboard(
-      jsonPath = file.path(outputFolder, outputFile)
+      jsonPath = file.path(outputFolder, outputFile),
+      launch.browser = FALSE,
+      port = 3838,
+      host = "0.0.0.0"
     )
   }
 
