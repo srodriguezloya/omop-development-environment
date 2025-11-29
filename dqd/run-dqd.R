@@ -15,7 +15,7 @@ outputFolder <- Sys.getenv("OUTPUT_FOLDER", "/dqd/results")
 outputFile <- Sys.getenv("OUTPUT_FILE", "dqd_results.json")
 
 # Path to JDBC drivers
-pathToDriver <- "/opt/jdbc_drivers"
+pathToDriver <- "/opt/jdbc"
 
 # Create connection details
 connectionDetails <- createConnectionDetails(

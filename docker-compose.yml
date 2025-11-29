@@ -89,7 +89,7 @@ services:
       - ohdsi-network
     restart: unless-stopped
 
-  # Achilles - Data Quality Dashboard (optional - run on demand)
+  # Achilles - (optional - run on demand)
   achilles:
     build:
       context: ./achilles
@@ -136,6 +136,7 @@ services:
     command: [ "Rscript", "/app/etl-synthea.R" ]
     restart: "no"  # Don't auto-restart - this is a one-time job
 
+  # DQD - (optional - run on demand)
   dqd:
     build:
       context: ./dqd
@@ -149,9 +150,9 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       CDM_SCHEMA: ${DATASOURCE_CDM_SCHEMA:-cdm}
       RESULTS_SCHEMA: ${DATASOURCE_RESULTS_SCHEMA:-ohdsi_results}
-      CDM_VERSION: "${OMOP_CDM_VERSION:-5.4}"
+      CDM_VERSION: ${OMOP_CDM_VERSION:-5.4}
       CDM_SOURCE_NAME: "OMOP Development CDM"
-      OUTPUT_FOLDER: /dqd/results
+      OUTPUT_FOLDER: /app/results
       OUTPUT_FILE: dqd_results.json
       VIEW_RESULTS: "true"  # Set to "true" to launch Shiny app
     depends_on:
@@ -160,12 +161,13 @@ services:
     networks:
       - ohdsi-network
     volumes:
-      - dqd-results:/dqd/results
+      - ./dqd/run-dqd.R:/app/run-dqd.R:ro
+      - ./sample-data/dqd-results:/app/results
     ports:
       - "3838:3838"  # For Shiny app if VIEW_RESULTS=true
     profiles:
       - tools  # This makes it optional - run with: docker compose --profile tools up
-    command: ["R", "--vanilla", "-f", "/dqd/run-dqd.R"]
+    command: ["R", "--vanilla", "-f", "/app/run-dqd.R"]
 
 volumes:
   postgres-data:
