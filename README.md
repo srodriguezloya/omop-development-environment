@@ -6,7 +6,7 @@
 > ⚠️ **This is NOT intended for enterprise or production deployments.** For production use, please follow
 > [OHDSI security and deployment best practices](https://ohdsi.github.io/TheBookOfOhdsi/).
 
-A complete OHDSI/OMOP CDM development stack with Docker. This environment provides Atlas, WebAPI, PostgreSQL, 
+A complete OHDSI/OMOP CDM development stack with Docker. This environment provides Atlas, Achilles, DQD, WebAPI, PostgreSQL, 
 and ETL tools for working with observational health data in the OMOP Common Data Model format.
 
 ## Quick Start
