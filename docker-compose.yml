@@ -89,28 +89,63 @@ services:
       - ohdsi-network
     restart: unless-stopped
 
-  # Achilles - (optional - run on demand)
-  achilles:
+  # Single HADES service for all R-based analytics
+  hades:
     build:
-      context: ./achilles
+      context: ./hades
       dockerfile: Dockerfile
-    container_name: omop-achilles
+    container_name: omop-hades
     environment:
-      ACHILLES_DB_URI: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ohdsi}?user=${POSTGRES_USER:-ohdsi_admin}&password=${POSTGRES_PASSWORD:-ohdsi}
-      ACHILLES_CDM_SCHEMA: ${ACHILLES_CDM_SCHEMA:-cdm}
-      ACHILLES_VOCAB_SCHEMA: ${ACHILLES_VOCAB_SCHEMA:-cdm}
-      ACHILLES_RESULTS_SCHEMA: ${ACHILLES_RESULTS_SCHEMA:-ohdsi_results}
-      ACHILLES_CDM_VERSION: ${OMOP_CDM_VERSION:-5.4}
+      # Database connection (shared by all tools)
+      HADES_DB_URI: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ohdsi}?user=${POSTGRES_USER:-ohdsi_admin}&password=${POSTGRES_PASSWORD:-ohdsi}
+
+      # Schema configuration
+      CDM_SCHEMA: ${DATASOURCE_CDM_SCHEMA:-cdm}
+      VOCAB_SCHEMA: ${DATASOURCE_CDM_SCHEMA:-cdm}
+      RESULTS_SCHEMA: ${DATASOURCE_RESULTS_SCHEMA:-ohdsi_results}
+      CDM_VERSION: ${OMOP_CDM_VERSION:-5.4}
+      CDM_SOURCE_NAME: ${ATLAS_INSTANCE_NAME:-OMOP Development}
+
+      # Output directory
+      ARES_OUTPUT_DIR: /ares-data
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - ohdsi-network
     profiles:
-      - tools  # Only starts when explicitly requested with --profile tools
+      - tools
     volumes:
-      - ./achilles/run-achilles.R:/app/run-achilles.R:ro
+      - ./hades/run-achilles.R:/app/run-achilles.R:ro
+      - ./hades/run-dqd.R:/app/run-dqd.R:ro
+      - ./hades/run-ares-indexer.R:/app/run-ares-indexer.R:ro
+      - ./sample-data/ares-data:/ares-data
+    # Default command runs Achilles, can be overridden
     command: ["Rscript", "/app/run-achilles.R"]
+
+
+#  # Achilles - (optional - run on demand)
+#  achilles:
+#    build:
+#      context: ./achilles
+#      dockerfile: Dockerfile
+#    container_name: omop-achilles
+#    environment:
+#      ACHILLES_DB_URI: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ohdsi}?user=${POSTGRES_USER:-ohdsi_admin}&password=${POSTGRES_PASSWORD:-ohdsi}
+#      ACHILLES_CDM_SCHEMA: ${ACHILLES_CDM_SCHEMA:-cdm}
+#      ACHILLES_VOCAB_SCHEMA: ${ACHILLES_VOCAB_SCHEMA:-cdm}
+#      ACHILLES_RESULTS_SCHEMA: ${ACHILLES_RESULTS_SCHEMA:-ohdsi_results}
+#      ACHILLES_CDM_VERSION: ${OMOP_CDM_VERSION:-5.4}
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#    networks:
+#      - ohdsi-network
+#    profiles:
+#      - tools  # Only starts when explicitly requested with --profile tools
+#    volumes:
+#      - ./achilles/run-achilles.R:/app/run-achilles.R:ro
+#    command: ["Rscript", "/app/run-achilles.R"]
 
   # Runs ETL-Synthea in R inside Docker
   etl-synthea:
@@ -136,38 +171,38 @@ services:
     command: [ "Rscript", "/app/etl-synthea.R" ]
     restart: "no"  # Don't auto-restart - this is a one-time job
 
-  # DQD - (optional - run on demand)
-  dqd:
-    build:
-      context: ./dqd
-      dockerfile: Dockerfile
-    container_name: omop-dqd
-    environment:
-      DBMS: postgresql
-      DB_SERVER: postgres/${POSTGRES_DB:-ohdsi}
-      DB_PORT: 5432
-      DB_USER: ${POSTGRES_USER:-ohdsi_admin}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      CDM_SCHEMA: ${DATASOURCE_CDM_SCHEMA:-cdm}
-      RESULTS_SCHEMA: ${DATASOURCE_RESULTS_SCHEMA:-ohdsi_results}
-      CDM_VERSION: ${OMOP_CDM_VERSION:-5.4}
-      CDM_SOURCE_NAME: "OMOP Development CDM"
-      OUTPUT_FOLDER: /app/results
-      OUTPUT_FILE: dqd_results.json
-      VIEW_RESULTS: "true"  # Set to "true" to launch Shiny app
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - ohdsi-network
-    volumes:
-      - ./dqd/run-dqd.R:/app/run-dqd.R:ro
-      - ./sample-data/dqd-results:/app/results
-    ports:
-      - "3838:3838"  # For Shiny app if VIEW_RESULTS=true
-    profiles:
-      - tools  # This makes it optional - run with: docker compose --profile tools up
-    command: ["R", "--vanilla", "-f", "/app/run-dqd.R"]
+#  # DQD - (optional - run on demand)
+#  dqd:
+#    build:
+#      context: ./dqd
+#      dockerfile: Dockerfile
+#    container_name: omop-dqd
+#    environment:
+#      DBMS: postgresql
+#      DB_SERVER: postgres/${POSTGRES_DB:-ohdsi}
+#      DB_PORT: 5432
+#      DB_USER: ${POSTGRES_USER:-ohdsi_admin}
+#      DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+#      CDM_SCHEMA: ${DATASOURCE_CDM_SCHEMA:-cdm}
+#      RESULTS_SCHEMA: ${DATASOURCE_RESULTS_SCHEMA:-ohdsi_results}
+#      CDM_VERSION: ${OMOP_CDM_VERSION:-5.4}
+#      CDM_SOURCE_NAME: "OMOP Development CDM"
+#      OUTPUT_FOLDER: /app/results
+#      OUTPUT_FILE: dqd_results.json
+#      VIEW_RESULTS: "true"  # Set to "true" to launch Shiny app
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#    networks:
+#      - ohdsi-network
+#    volumes:
+#      - ./dqd/run-dqd.R:/app/run-dqd.R:ro
+#      - ./sample-data/dqd-results:/app/results
+#    ports:
+#      - "3838:3838"  # For Shiny app if VIEW_RESULTS=true
+#    profiles:
+#      - tools  # This makes it optional - run with: docker compose --profile tools up
+#    command: ["R", "--vanilla", "-f", "/app/run-dqd.R"]
 
 volumes:
   postgres-data:
