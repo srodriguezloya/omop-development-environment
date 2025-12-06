@@ -199,7 +199,7 @@ cat("✓ Export Complete!\n")
 cat("========================================\n\n")
 
 cat("Created files:\n")
-system(paste("ls -lh", outputFolder))
+system(paste0("ls -lh '", outputFolder, "'"))
 
 cat("\n\nThis export is compatible with AresIndexer!\n")
 cat("Next step:\n")
