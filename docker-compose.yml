@@ -119,6 +119,7 @@ services:
       - ./hades/run-achilles.R:/app/run-achilles.R:ro
       - ./hades/run-dqd.R:/app/run-dqd.R:ro
       - ./hades/run-ares-indexer.R:/app/run-ares-indexer.R:ro
+      - ./hades/manual-export-achilles.R:/app/manual-export-achilles.R:ro
       - ./sample-data/ares-data:/ares-data
     # Default command runs Achilles, can be overridden
     command: ["Rscript", "/app/run-achilles.R"]
