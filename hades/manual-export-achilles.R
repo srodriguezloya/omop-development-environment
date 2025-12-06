@@ -2,10 +2,9 @@
 
 # manual-export-achilles.R
 # Manual export of Achilles results to Ares format
-# Workaround for exportToAres() bug
+# Fixed version that creates its own source release key
 
 library(DatabaseConnector)
-library(AresIndexer)
 library(jsonlite)
 
 cat("========================================\n")
@@ -32,19 +31,10 @@ cd <- DatabaseConnector::createConnectionDetails(
   pathToDriver = "/opt/jdbc"
 )
 
-cat("Step 1/5: Getting source release key...\n")
-sourceReleaseKey <- AresIndexer::getSourceReleaseKey(cd, cdm_schema)
-cat(sprintf("  Source key: %s\n\n", sourceReleaseKey))
-
-outputFolder <- file.path(ares_output_dir, sourceReleaseKey)
-dir.create(outputFolder, recursive = TRUE, showWarnings = FALSE)
-cat(sprintf("  Output folder: %s\n\n", outputFolder))
-
-cat("Step 2/5: Connecting to database...\n")
+cat("Step 1/5: Creating source release key...\n")
 connection <- DatabaseConnector::connect(cd)
-cat("  ✓ Connected\n\n")
 
-cat("Step 3/5: Creating datasource.json...\n")
+# Get CDM source information to build release key
 cdmSourceSql <- "SELECT * FROM @cdm_schema.cdm_source LIMIT 1"
 cdmSourceData <- DatabaseConnector::renderTranslateQuerySql(
   connection,
@@ -53,14 +43,61 @@ cdmSourceData <- DatabaseConnector::renderTranslateQuerySql(
   snakeCaseToCamelCase = TRUE
 )
 
+# Get vocabulary version
+vocabSql <- "SELECT vocabulary_version FROM @vocab_schema.vocabulary WHERE vocabulary_id = 'None' LIMIT 1"
+vocabData <- DatabaseConnector::renderTranslateQuerySql(
+  connection,
+  vocabSql,
+  vocab_schema = vocab_schema,
+  snakeCaseToCamelCase = TRUE
+)
+
+# Build source release key manually
+cdmVersion <- "5.4"
+vocabVersion <- if(nrow(vocabData) > 0 && !is.na(vocabData$vocabularyVersion[1])) {
+  gsub(" ", "_", vocabData$vocabularyVersion[1])
+} else {
+  "unknown"
+}
+
+cdmReleaseDate <- if(nrow(cdmSourceData) > 0 && !is.na(cdmSourceData$cdmReleaseDate[1])) {
+  format(as.Date(cdmSourceData$cdmReleaseDate[1]), "%Y%m%d")
+} else {
+  format(Sys.Date(), "%Y%m%d")
+}
+
+# Create source release key in format: SourceName-vCDMVersion-VOCABVersion-ReleaseDate
+sourceNameClean <- gsub("[^A-Za-z0-9]", "_", cdm_source_name)
+sourceReleaseKey <- sprintf("%s-v%s-VOCAB_%s-%s",
+                            sourceNameClean,
+                            cdmVersion,
+                            vocabVersion,
+                            cdmReleaseDate)
+
+cat(sprintf("  Source release key: %s\n\n", sourceReleaseKey))
+
+# Create output folder
+outputFolder <- file.path(ares_output_dir, sourceReleaseKey)
+cat(sprintf("  Creating folder: %s\n", outputFolder))
+
+if (!dir.exists(outputFolder)) {
+  dir.create(outputFolder, recursive = TRUE)
+  cat("  ✓ Folder created\n\n")
+} else {
+  cat("  ✓ Folder already exists\n\n")
+}
+
+cat("Step 2/5: Creating datasource.json...\n")
+
 datasource <- list(
   name = cdm_source_name,
   releaseKey = sourceReleaseKey,
   cdmReleaseDate = if(nrow(cdmSourceData) > 0 && !is.na(cdmSourceData$cdmReleaseDate[1]))
     as.character(cdmSourceData$cdmReleaseDate[1]) else as.character(Sys.Date()),
-  cdmVersion = "5.4",
-  vocabularyVersion = if(nrow(cdmSourceData) > 0 && !is.na(cdmSourceData$vocabularyVersion[1]))
-    cdmSourceData$vocabularyVersion[1] else "unknown"
+  cdmVersion = cdmVersion,
+  vocabularyVersion = vocabVersion,
+  cdmSourceName = if(nrow(cdmSourceData) > 0 && !is.na(cdmSourceData$cdmSourceName[1]))
+    cdmSourceData$cdmSourceName[1] else cdm_source_name
 )
 
 jsonlite::write_json(
@@ -71,11 +108,13 @@ jsonlite::write_json(
 )
 cat("  ✓ datasource.json created\n\n")
 
-cat("Step 4/5: Exporting Achilles results...\n")
-cat("  This exports all ~250K results, may take 2-3 minutes...\n\n")
+cat("Step 3/5: Exporting Achilles results...\n")
+cat("  This exports all results, may take 2-3 minutes...\n\n")
 
 domainFolder <- file.path(outputFolder, "domain")
-dir.create(domainFolder, recursive = TRUE, showWarnings = FALSE)
+if (!dir.exists(domainFolder)) {
+  dir.create(domainFolder, recursive = TRUE)
+}
 
 # Get all unique analysis IDs
 analysesSql <- "SELECT DISTINCT analysis_id FROM @results_schema.achilles_results ORDER BY analysis_id"
@@ -115,19 +154,35 @@ for(i in 1:nrow(analyses)) {
 
 cat(sprintf("  ✓ Exported %d analyses\n\n", exportCount))
 
+cat("Step 4/5: Exporting Achilles analysis metadata...\n")
+
+# Export achilles_analysis table
+analysisMetaSql <- "SELECT * FROM @results_schema.achilles_analysis"
+analysisMeta <- DatabaseConnector::renderTranslateQuerySql(
+  connection,
+  analysisMetaSql,
+  results_schema = results_schema,
+  snakeCaseToCamelCase = TRUE
+)
+
+if(nrow(analysisMeta) > 0) {
+  jsonlite::write_json(
+    analysisMeta,
+    file.path(outputFolder, "achilles_analysis.json"),
+    auto_unbox = TRUE
+  )
+  cat(sprintf("  ✓ Exported %d analysis definitions\n\n", nrow(analysisMeta)))
+}
+
 cat("Step 5/5: Running temporal characterization...\n")
 tempCharFile <- file.path(outputFolder, "temporal-characterization.csv")
 
-# Query temporal data
+# Query temporal data - using a simpler approach
 tempSql <- "
-SELECT ar.analysis_id, ar.stratum_1, ar.stratum_2, ar.count_value
-FROM @results_schema.achilles_results ar
-WHERE ar.analysis_id IN (
-  SELECT analysis_id
-  FROM @results_schema.achilles_analysis
-  WHERE analysis_type = 'Temporal Characterization'
-)
-ORDER BY ar.analysis_id, ar.stratum_1, ar.stratum_2
+SELECT analysis_id, stratum_1, stratum_2, count_value
+FROM @results_schema.achilles_results
+WHERE analysis_id BETWEEN 1800 AND 1899
+ORDER BY analysis_id, stratum_1, stratum_2
 "
 
 tempResults <- DatabaseConnector::renderTranslateQuerySql(
@@ -151,9 +206,14 @@ cat("Export Complete!\n")
 cat("========================================\n\n")
 
 cat("Summary:\n")
+cat(sprintf("  Source release key: %s\n", sourceReleaseKey))
 cat(sprintf("  Output folder: %s\n", outputFolder))
 cat(sprintf("  Analyses exported: %d\n", exportCount))
+
 cat("\nFiles created:\n")
+system(paste("ls -lh", outputFolder))
+
+cat("\nDirectory structure:\n")
 system(paste("find", outputFolder, "-type f | head -20"))
 
 cat("\n\nNext step: Run AresIndexer\n")
