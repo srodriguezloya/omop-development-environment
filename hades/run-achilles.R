@@ -85,10 +85,6 @@ if (!dir.exists(ares_output_dir)) {
   cat(sprintf("Created directory: %s\n", ares_output_dir))
 }
 
-# Add this line to normalize the path right before the problematic function call
-normalized_ares_path <- normalizePath(ares_output_dir, mustWork = FALSE)
-cat(sprintf("Using normalized path: %s\n", normalized_ares_path))
-
 tryCatch({
   # Export Achilles results to Ares format (official method)
   cat("Exporting Achilles results to Ares format...\n")
@@ -98,7 +94,7 @@ tryCatch({
     cdmDatabaseSchema = cdm_schema,
     resultsDatabaseSchema = results_schema,
     vocabDatabaseSchema = vocab_schema,
-    outputPath = normalized_ares_path # <-- Use the normalized path
+    outputPath = ares_output_dir
   )
 
   cat("✓ Achilles results exported\n\n")

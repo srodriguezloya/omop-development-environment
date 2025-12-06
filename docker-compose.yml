@@ -14,7 +14,6 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./postgres/init-scripts:/docker-entrypoint-initdb.d
       - ./sample-data:/sample-data:ro
-      - ./sample-data/ares-data:/ares-data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-ohdsi_admin} -d $${POSTGRES_DB:-ohdsi}"]
       interval: 10s
@@ -120,7 +119,8 @@ services:
       - ./hades/run-achilles.R:/app/run-achilles.R:ro
       - ./hades/run-dqd.R:/app/run-dqd.R:ro
       - ./hades/run-ares-indexer.R:/app/run-ares-indexer.R:ro
-      - ./hades/manual-export-achilles.R:/app/manual-export-achilles.R:ro
+      - ./hades/exportToAres-patched.R:/app/exportToAres-patched.R:ro
+      - ./hades/export-to-ares.R:/app/export-to-ares.R:ro
       - ./sample-data/ares-data:/ares-data
     # Default command runs Achilles, can be overridden
     command: ["Rscript", "/app/run-achilles.R"]
