@@ -265,7 +265,7 @@ generateAOPersonReport <- function(connectionDetails, cdmDatabaseSchema, results
     vocab_database_schema = vocabDatabaseSchema
   )
 
-  personSummaryData <- DatabaseConnector::querySql(conn, renderedSql)
+  personSummaryData <- DatabaseConnector::querySql(conn, renderedSql, snakeCaseToCamelCase = TRUE)
   output$SUMMARY = personSummaryData
 
   renderedSql <- SqlRender::loadRenderTranslateSql(
@@ -277,7 +277,7 @@ generateAOPersonReport <- function(connectionDetails, cdmDatabaseSchema, results
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  ageGenderData <- DatabaseConnector::querySql(conn, renderedSql)
+  ageGenderData <- DatabaseConnector::querySql(conn, renderedSql, snakeCaseToCamelCase = TRUE)
   output$AGE_GENDER_DATA = ageGenderData
 
   renderedSql <- SqlRender::loadRenderTranslateSql(
@@ -289,7 +289,7 @@ generateAOPersonReport <- function(connectionDetails, cdmDatabaseSchema, results
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  genderData <- DatabaseConnector::querySql(conn, renderedSql)
+  genderData <- DatabaseConnector::querySql(conn, renderedSql, snakeCaseToCamelCase = TRUE)
   output$GENDER_DATA = genderData
 
   renderedSql <- SqlRender::loadRenderTranslateSql(
@@ -301,7 +301,7 @@ generateAOPersonReport <- function(connectionDetails, cdmDatabaseSchema, results
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  raceData <- DatabaseConnector::querySql(conn, renderedSql)
+  raceData <- DatabaseConnector::querySql(conn, renderedSql, snakeCaseToCamelCase = TRUE)
   output$RACE_DATA = raceData
 
   renderedSql <- SqlRender::loadRenderTranslateSql(
@@ -313,7 +313,7 @@ generateAOPersonReport <- function(connectionDetails, cdmDatabaseSchema, results
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  ethnicityData <- DatabaseConnector::querySql(conn, renderedSql)
+  ethnicityData <- DatabaseConnector::querySql(conn, renderedSql, snakeCaseToCamelCase = TRUE)
   output$ETHNICITY_DATA = ethnicityData
 
 
@@ -326,7 +326,7 @@ generateAOPersonReport <- function(connectionDetails, cdmDatabaseSchema, results
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  birthYearData <- DatabaseConnector::querySql(conn, renderedSql)
+  birthYearData <- DatabaseConnector::querySql(conn, renderedSql, snakeCaseToCamelCase = TRUE)
   output$BIRTH_YEAR_DATA <- birthYearData
   return(output)
 }
@@ -343,7 +343,7 @@ generateAOAchillesPerformanceReport <- function(connection, cdmDatabaseSchema, r
                                                                 vocab_database_schema = vocabDatabaseSchema
   )
 
-  dataPerformance <- DatabaseConnector::querySql(connection, queryAchillesPerformance)
+  dataPerformance <- DatabaseConnector::querySql(connection, queryAchillesPerformance, snakeCaseToCamelCase = TRUE)
   names(dataPerformance) <- c("analysis_id", "analysis_name", "category", "elapsed_seconds")
   dataPerformance$elapsed_seconds <- format(round(as.numeric(dataPerformance$elapsed_seconds), digits = 2), nsmall = 2)
   return(dataPerformance)
@@ -382,10 +382,10 @@ generateAODeathReport <- function(connection, cdmDatabaseSchema, resultsDatabase
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  deathByTypeData <- DatabaseConnector::querySql(connection, queryDeathByType)
-  prevalenceByGenderAgeYearData <- DatabaseConnector::querySql(connection, queryPrevalenceByGenderAgeYear)
-  prevalenceByMonthData <- DatabaseConnector::querySql(connection, queryPrevalenceByMonth)
-  ageAtDeathData <- DatabaseConnector::querySql(connection, queryAgeAtDeath)
+  deathByTypeData <- DatabaseConnector::querySql(connection, queryDeathByType, snakeCaseToCamelCase = TRUE)
+  prevalenceByGenderAgeYearData <- DatabaseConnector::querySql(connection, queryPrevalenceByGenderAgeYear, snakeCaseToCamelCase = TRUE)
+  prevalenceByMonthData <- DatabaseConnector::querySql(connection, queryPrevalenceByMonth, snakeCaseToCamelCase = TRUE)
+  ageAtDeathData <- DatabaseConnector::querySql(connection, queryAgeAtDeath, snakeCaseToCamelCase = TRUE)
 
   output = { }
   output$PREVALENCE_BY_GENDER_AGE_YEAR = prevalenceByGenderAgeYearData
@@ -404,7 +404,7 @@ generateAOObservationPeriodReport <- function(connection, cdmDatabaseSchema, res
     dbms = connection@dbms,
     results_database_schema = resultsDatabaseSchema
   )
-  ageAtFirstObservationData <- DatabaseConnector::querySql(connection, renderedSql)
+  ageAtFirstObservationData <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   output$AGE_AT_FIRST_OBSERVATION <- ageAtFirstObservationData
 
   renderedSql <- SqlRender::loadRenderTranslateSql(
@@ -414,7 +414,7 @@ generateAOObservationPeriodReport <- function(connection, cdmDatabaseSchema, res
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  ageByGenderData <- DatabaseConnector::querySql(connection, renderedSql)
+  ageByGenderData <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   output$AGE_BY_GENDER = ageByGenderData
 
   observationLengthHist <- { }
@@ -424,7 +424,7 @@ generateAOObservationPeriodReport <- function(connection, cdmDatabaseSchema, res
     dbms = connection@dbms,
     results_database_schema = resultsDatabaseSchema
   )
-  observationLengthStats <- DatabaseConnector::querySql(connection, renderedSql)
+  observationLengthStats <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   observationLengthHist$MIN = observationLengthStats$MIN_VALUE
   observationLengthHist$MAX = observationLengthStats$MAX_VALUE
   observationLengthHist$INTERVAL_SIZE = observationLengthStats$INTERVAL_SIZE
@@ -436,7 +436,7 @@ generateAOObservationPeriodReport <- function(connection, cdmDatabaseSchema, res
     dbms = connection@dbms,
     results_database_schema = resultsDatabaseSchema
   )
-  observationLengthData <- DatabaseConnector::querySql(connection, renderedSql)
+  observationLengthData <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   output$OBSERVATION_LENGTH_HISTOGRAM = observationLengthHist
 
   renderedSql <- SqlRender::loadRenderTranslateSql(
@@ -445,7 +445,7 @@ generateAOObservationPeriodReport <- function(connection, cdmDatabaseSchema, res
     dbms = connection@dbms,
     results_database_schema = resultsDatabaseSchema
   )
-  cumulativeDurationData <- DatabaseConnector::querySql(connection, renderedSql)
+  cumulativeDurationData <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   cumulativeDurationData$X_LENGTH_OF_OBSERVATION <- cumulativeDurationData$X_LENGTH_OF_OBSERVATION / 365.25
   cumulativeDurationData$SERIES_NAME <- NULL
   names(cumulativeDurationData) <- c("YEARS", "PERCENT_PEOPLE")
@@ -458,7 +458,7 @@ generateAOObservationPeriodReport <- function(connection, cdmDatabaseSchema, res
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  opLengthByGenderData <- DatabaseConnector::querySql(connection, renderedSql)
+  opLengthByGenderData <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   opLengthByGenderData$MIN_VALUE <- opLengthByGenderData$MIN_VALUE / 365.25
   opLengthByGenderData$P10_VALUE <- opLengthByGenderData$P10_VALUE / 365.25
   opLengthByGenderData$P25_VALUE <- opLengthByGenderData$P25_VALUE / 365.25
@@ -475,7 +475,7 @@ generateAOObservationPeriodReport <- function(connection, cdmDatabaseSchema, res
     dbms = connection@dbms,
     results_database_schema = resultsDatabaseSchema
   )
-  opLengthByAgeData <- DatabaseConnector::querySql(connection, renderedSql)
+  opLengthByAgeData <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   opLengthByAgeData$MIN_VALUE <- opLengthByAgeData$MIN_VALUE / 365.25
   opLengthByAgeData$P10_VALUE <- opLengthByAgeData$P10_VALUE / 365.25
   opLengthByAgeData$P25_VALUE <- opLengthByAgeData$P25_VALUE / 365.25
@@ -492,7 +492,7 @@ generateAOObservationPeriodReport <- function(connection, cdmDatabaseSchema, res
     dbms = connection@dbms,
     results_database_schema = resultsDatabaseSchema
   )
-  observedByYearStats <- DatabaseConnector::querySql(connection, renderedSql)
+  observedByYearStats <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   observedByYearHist$MIN = observedByYearStats$MIN_VALUE
   observedByYearHist$MAX = observedByYearStats$MAX_VALUE
   observedByYearHist$INTERVAL_SIZE = observedByYearStats$INTERVAL_SIZE
@@ -504,7 +504,7 @@ generateAOObservationPeriodReport <- function(connection, cdmDatabaseSchema, res
     dbms = connection@dbms,
     results_database_schema = resultsDatabaseSchema
   )
-  observedByYearData <- DatabaseConnector::querySql(connection, renderedSql)
+  observedByYearData <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   observedByYearHist$DATA <- observedByYearData
   output$OBSERVED_BY_YEAR_HISTOGRAM = observedByYearHist
 
@@ -515,7 +515,7 @@ generateAOObservationPeriodReport <- function(connection, cdmDatabaseSchema, res
     dbms = connection@dbms,
     results_database_schema = resultsDatabaseSchema
   )
-  observedByMonth <- DatabaseConnector::querySql(connection, renderedSql)
+  observedByMonth <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   output$OBSERVED_BY_MONTH = observedByMonth
 
   renderedSql <- SqlRender::loadRenderTranslateSql(
@@ -524,7 +524,7 @@ generateAOObservationPeriodReport <- function(connection, cdmDatabaseSchema, res
     dbms = connection@dbms,
     results_database_schema = resultsDatabaseSchema
   )
-  personPeriodsData <- DatabaseConnector::querySql(connection, renderedSql)
+  personPeriodsData <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   output$PERSON_PERIODS_DATA = personPeriodsData
   return(output)
 }
@@ -799,7 +799,7 @@ generateAOMetadataReport <- function(connection, cdmDatabaseSchema, outputPath)
       dbms = connection@dbms,
       cdm_database_schema = cdmDatabaseSchema
     )
-    dataMetadata <- DatabaseConnector::querySql(connection, queryMetadata)
+    dataMetadata <- DatabaseConnector::querySql(connection, queryMetadata, snakeCaseToCamelCase = TRUE)
     return(dataMetadata)
   }
 }
@@ -950,7 +950,7 @@ generateAOCdmSourceReport <- function(connection, cdmDatabaseSchema, outputPath)
       cdm_database_schema = cdmDatabaseSchema
     )
 
-    dataCdmSource <- DatabaseConnector::querySql(connection, queryCdmSource)
+    dataCdmSource <- DatabaseConnector::querySql(connection, queryCdmSource, snakeCaseToCamelCase = TRUE)
     return(dataCdmSource)
   }
 }
@@ -1908,7 +1908,7 @@ generateDataDensityTotal <- function(connection, resultsDatabaseSchema) {
     results_database_schema = resultsDatabaseSchema
   )
 
-  totalRecordsData <- DatabaseConnector::querySql(connection, renderedSql)
+  totalRecordsData <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   colnames(totalRecordsData) <- c("domain", "date", "records")
   totalRecordsData$date <- lubridate::parse_date_time(totalRecordsData$date, "ym")
 
@@ -1926,7 +1926,7 @@ generateLocationData <- function(connection, resultsDatabaseSchema) {
     results_database_schema = resultsDatabaseSchema
   )
 
-  locationData <- DatabaseConnector::querySql(connection, renderedSql)
+  locationData <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   return(locationData)
 }
 
@@ -1938,7 +1938,7 @@ generateDataDensityRecordsPerPerson <- function(connection, resultsDatabaseSchem
     results_database_schema = resultsDatabaseSchema
   )
 
-  recordsPerPerson <- DatabaseConnector::querySql(connection, renderedSql)
+  recordsPerPerson <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   colnames(recordsPerPerson) <- c("domain", "date", "records")
   recordsPerPerson$date <- lubridate::parse_date_time(recordsPerPerson$date, "ym")
   recordsPerPerson$records <- round(recordsPerPerson$records, 2)
@@ -1952,7 +1952,7 @@ generateDataDensityConceptsPerPerson <- function(connection, resultsDatabaseSche
     dbms = connection@dbms,
     results_database_schema = resultsDatabaseSchema
   )
-  conceptsPerPerson <- DatabaseConnector::querySql(connection, renderedSql)
+  conceptsPerPerson <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   return(conceptsPerPerson)
   #data.table::fwrite(conceptsPerPerson, file=paste0(sourceOutputPath, "/datadensity-concepts-per-person.csv"))
   #dbWriteTable(duckdbCon, "concepts_per_person", conceptsPerPerson)
@@ -1965,7 +1965,7 @@ generateDataDensityDomainsPerPerson <- function(connection, resultsDatabaseSchem
     dbms = connection@dbms,
     results_database_schema = resultsDatabaseSchema
   )
-  domainsPerPerson <- DatabaseConnector::querySql(connection, renderedSql)
+  domainsPerPerson <- DatabaseConnector::querySql(connection, renderedSql, snakeCaseToCamelCase = TRUE)
   domainsPerPerson$PERCENT_VALUE <- round(as.numeric(domainsPerPerson$PERCENT_VALUE), 2)
   return(domainsPerPerson)
   #data.table::fwrite(domainsPerPerson, file=paste0(sourceOutputPath, "/datadensity-domains-per-person.csv"))
@@ -1980,7 +1980,7 @@ generateDomainSummaryConditions <- function(connection, resultsDatabaseSchema, v
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  dataConditions <- DatabaseConnector::querySql(connection, queryConditions)
+  dataConditions <- DatabaseConnector::querySql(connection, queryConditions, snakeCaseToCamelCase = TRUE)
   dataConditions$PERCENT_PERSONS <- format(round(dataConditions$PERCENT_PERSONS, 4), nsmall = 4)
   dataConditions$PERCENT_PERSONS_NTILE <- dplyr::ntile(dplyr::desc(dataConditions$PERCENT_PERSONS), 10)
   dataConditions$RECORDS_PER_PERSON <- format(round(dataConditions$RECORDS_PER_PERSON, 1), nsmall = 1)
@@ -1998,7 +1998,7 @@ generateDomainSummaryConditionEras <- function(connection, resultsDatabaseSchema
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  dataConditionEra <- DatabaseConnector::querySql(connection, queryConditionEra)
+  dataConditionEra <- DatabaseConnector::querySql(connection, queryConditionEra, snakeCaseToCamelCase = TRUE)
   dataConditionEra$PERCENT_PERSONS <- format(round(dataConditionEra$PERCENT_PERSONS, 4), nsmall = 4)
   dataConditionEra$PERCENT_PERSONS_NTILE <- dplyr::ntile(dplyr::desc(dataConditionEra$PERCENT_PERSONS), 10)
   dataConditionEra$RECORDS_PER_PERSON <- format(round(dataConditionEra$RECORDS_PER_PERSON, 1), nsmall = 1)
@@ -2015,7 +2015,7 @@ generateDomainSummaryDrugs <- function(connection, resultsDatabaseSchema, vocabD
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  dataDrugs <- DatabaseConnector::querySql(connection, queryDrugs)
+  dataDrugs <- DatabaseConnector::querySql(connection, queryDrugs, snakeCaseToCamelCase = TRUE)
   dataDrugs$PERCENT_PERSONS <- format(round(dataDrugs$PERCENT_PERSONS, 4), nsmall = 4)
   dataDrugs$PERCENT_PERSONS_NTILE <- dplyr::ntile(dplyr::desc(dataDrugs$PERCENT_PERSONS), 10)
   dataDrugs$RECORDS_PER_PERSON <- format(round(dataDrugs$RECORDS_PER_PERSON, 1), nsmall = 1)
@@ -2032,7 +2032,7 @@ generateDomainDrugStratification <- function(connection, resultsDatabaseSchema, 
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  dataDrugType <- DatabaseConnector::querySql(connection, queryDrugType)
+  dataDrugType <- DatabaseConnector::querySql(connection, queryDrugType, snakeCaseToCamelCase = TRUE)
   return(dataDrugType)
   #data.table::fwrite(dataDrugType, file=paste0(sourceOutputPath, "/domain-drug-stratification.csv"))
 }
@@ -2045,7 +2045,7 @@ generateDomainSummaryDrugEra <- function(connection, resultsDatabaseSchema, voca
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  dataDrugEra <- DatabaseConnector::querySql(connection, queryDrugEra)
+  dataDrugEra <- DatabaseConnector::querySql(connection, queryDrugEra, snakeCaseToCamelCase = TRUE)
   dataDrugEra$PERCENT_PERSONS <- format(round(dataDrugEra$PERCENT_PERSONS, 4), nsmall = 4)
   dataDrugEra$PERCENT_PERSONS_NTILE <- dplyr::ntile(dplyr::desc(dataDrugEra$PERCENT_PERSONS), 10)
   dataDrugEra$RECORDS_PER_PERSON <- format(round(dataDrugEra$RECORDS_PER_PERSON, 1), nsmall = 1)
@@ -2062,7 +2062,7 @@ generateDomainSummaryMeasurements <- function(connection, resultsDatabaseSchema,
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  dataMeasurements <- DatabaseConnector::querySql(connection, queryMeasurements)
+  dataMeasurements <- DatabaseConnector::querySql(connection, queryMeasurements, snakeCaseToCamelCase = TRUE)
   dataMeasurements$PERCENT_PERSONS <- format(round(dataMeasurements$PERCENT_PERSONS, 4), nsmall = 4)
   dataMeasurements$PERCENT_PERSONS_NTILE <- dplyr::ntile(dplyr::desc(dataMeasurements$PERCENT_PERSONS), 10)
   dataMeasurements$RECORDS_PER_PERSON <- format(round(dataMeasurements$RECORDS_PER_PERSON, 1), nsmall = 1)
@@ -2079,7 +2079,7 @@ generateDomainSummaryObservations <- function(connection, resultsDatabaseSchema,
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  dataObservations <- DatabaseConnector::querySql(connection, queryObservations)
+  dataObservations <- DatabaseConnector::querySql(connection, queryObservations, snakeCaseToCamelCase = TRUE)
   dataObservations$PERCENT_PERSONS <- format(round(dataObservations$PERCENT_PERSONS, 4), nsmall = 4)
   dataObservations$PERCENT_PERSONS_NTILE <- dplyr::ntile(dplyr::desc(dataObservations$PERCENT_PERSONS), 10)
   dataObservations$RECORDS_PER_PERSON <- format(round(dataObservations$RECORDS_PER_PERSON, 1), nsmall = 1)
@@ -2096,7 +2096,7 @@ generateDomainSummaryVisitDetails <- function(connection, resultsDatabaseSchema,
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  dataVisitDetails <- DatabaseConnector::querySql(connection, queryVisitDetails)
+  dataVisitDetails <- DatabaseConnector::querySql(connection, queryVisitDetails, snakeCaseToCamelCase = TRUE)
   dataVisitDetails$PERCENT_PERSONS <- format(round(dataVisitDetails$PERCENT_PERSONS, 4), nsmall = 4)
   dataVisitDetails$PERCENT_PERSONS_NTILE <- dplyr::ntile(dplyr::desc(dataVisitDetails$PERCENT_PERSONS), 10)
   dataVisitDetails$RECORDS_PER_PERSON <- format(round(dataVisitDetails$RECORDS_PER_PERSON, 1), nsmall = 1)
@@ -2114,7 +2114,7 @@ generateDomainSummaryVisits <- function(connection, resultsDatabaseSchema, vocab
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  dataVisits <- DatabaseConnector::querySql(connection, queryVisits)
+  dataVisits <- DatabaseConnector::querySql(connection, queryVisits, snakeCaseToCamelCase = TRUE)
   dataVisits$PERCENT_PERSONS <- format(round(dataVisits$PERCENT_PERSONS, 4), nsmall = 4)
   dataVisits$PERCENT_PERSONS_NTILE <- dplyr::ntile(dplyr::desc(dataVisits$PERCENT_PERSONS), 10)
   dataVisits$RECORDS_PER_PERSON <- format(round(dataVisits$RECORDS_PER_PERSON, 1), nsmall = 1)
@@ -2132,7 +2132,7 @@ generateDomainVisitStratification <- function(connection, resultsDatabaseSchema,
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  dataVisits <- DatabaseConnector::querySql(connection, queryVisits)
+  dataVisits <- DatabaseConnector::querySql(connection, queryVisits, snakeCaseToCamelCase = TRUE)
   return(dataVisits)
   #data.table::fwrite(dataVisits, file=paste0(sourceOutputPath, "/domain-visit-stratification.csv"))
 }
@@ -2145,7 +2145,7 @@ generateDomainSummaryProcedures <- function(connection, resultsDatabaseSchema, v
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  dataProcedures <- DatabaseConnector::querySql(connection, queryProcedures)
+  dataProcedures <- DatabaseConnector::querySql(connection, queryProcedures, snakeCaseToCamelCase = TRUE)
   dataProcedures$PERCENT_PERSONS <- format(round(dataProcedures$PERCENT_PERSONS, 4), nsmall = 4)
   dataProcedures$PERCENT_PERSONS_NTILE <- dplyr::ntile(dplyr::desc(dataProcedures$PERCENT_PERSONS), 10)
   dataProcedures$RECORDS_PER_PERSON <- format(round(dataProcedures$RECORDS_PER_PERSON, 1), nsmall = 1)
@@ -2162,7 +2162,7 @@ generateDomainSummaryDevices <- function(connection, resultsDatabaseSchema, voca
     results_database_schema = resultsDatabaseSchema,
     vocab_database_schema = vocabDatabaseSchema
   )
-  dataDevices <- DatabaseConnector::querySql(connection, queryDevices)
+  dataDevices <- DatabaseConnector::querySql(connection, queryDevices, snakeCaseToCamelCase = TRUE)
   dataDevices$PERCENT_PERSONS <- format(round(dataDevices$PERCENT_PERSONS, 4), nsmall = 4)
   dataDevices$PERCENT_PERSONS_NTILE <- dplyr::ntile(dplyr::desc(dataDevices$PERCENT_PERSONS), 10)
   dataDevices$RECORDS_PER_PERSON <- format(round(dataDevices$RECORDS_PER_PERSON, 1), nsmall = 1)
@@ -2180,7 +2180,7 @@ generateDomainSummaryProvider <- function(connection, resultsDatabaseSchema, voc
     vocab_database_schema = vocabDatabaseSchema
   )
   writeLines("Generating provider reports")
-  dataProviders <- DatabaseConnector::querySql(connection, queryProviders)
+  dataProviders <- DatabaseConnector::querySql(connection, queryProviders, snakeCaseToCamelCase = TRUE)
   dataProviders$PERCENT_PERSONS <- format(round(dataProviders$PERCENT_PERSONS, 4), nsmall = 4)
   return(dataProviders)
   #data.table::fwrite(dataProviders, file=paste0(sourceOutputPath, "/domain-summary-provider.csv"))
@@ -2194,7 +2194,7 @@ generateQualityCompleteness <- function(connection, resultsDatabaseSchema) {
     dbms = connection@dbms,
     results_database_schema = resultsDatabaseSchema
   )
-  dataCompleteness <- DatabaseConnector::querySql(connection, queryCompleteness)
+  dataCompleteness <- DatabaseConnector::querySql(connection, queryCompleteness, snakeCaseToCamelCase = TRUE)
   dataCompleteness <- dataCompleteness[order(-dataCompleteness$RECORD_COUNT),]
   # prevent downstream crashes with large files
   if (nrow(dataCompleteness) > 100000) {
@@ -2244,7 +2244,6 @@ exportToAres <- function(
   sql <- SqlRender::render(sql = "select * from @cdmDatabaseSchema.cdm_source;", cdmDatabaseSchema = cdmDatabaseSchema)
   sql <- SqlRender::translate(sql = sql, targetDialect = connectionDetails$dbms)
   metadata <- DatabaseConnector::querySql(conn, sql, snakeCaseToCamelCase = TRUE)
-  # POSTGRESQL FIX: Use snakeCaseToCamelCase to handle lowercase column names
   sourceKey <- gsub(" ", "_", metadata$cdmSourceAbbreviation)
   releaseDateKey <- format(lubridate::ymd(metadata$cdmReleaseDate), "%Y%m%d")
   sourceOutputPath <- file.path(outputPath, sourceKey, releaseDateKey)
