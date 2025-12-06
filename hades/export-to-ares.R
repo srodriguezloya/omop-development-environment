@@ -39,18 +39,19 @@ cd <- DatabaseConnector::createConnectionDetails(
 connection <- DatabaseConnector::connect(cd)
 resultCount <- DatabaseConnector::querySql(
   connection,
-  sprintf("SELECT COUNT(*) as count FROM %s.achilles_results", results_schema)
+  sprintf("SELECT COUNT(*) as count FROM %s.achilles_results", results_schema),
+  snakeCaseToCamelCase = TRUE
 )
 DatabaseConnector::disconnect(connection)
 
-if (resultCount$COUNT[1] == 0) {
+if (resultCount$count[1] == 0) {
   cat("✗ No Achilles results found!\n")
   cat("  Please run Achilles first:\n")
   cat("  docker compose --profile tools run --rm hades Rscript /app/run-achilles.R\n\n")
   quit(status = 1)
 }
 
-cat(sprintf("✓ Found %s Achilles results\n\n", format(resultCount$COUNT[1], big.mark=",")))
+cat(sprintf("✓ Found %s Achilles results\n\n", format(resultCount$count[1], big.mark=",")))
 
 # Load the patched exportToAres function
 cat("Loading PostgreSQL-compatible exportToAres function...\n")
